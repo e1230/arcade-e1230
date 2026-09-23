@@ -1,6 +1,6 @@
 # SPEC 01 — MVP visual de Arcade E1230
 
-> **Estado:** Terminado
+> **Estado:** Implementado
 > **Depende de:** Ninguno
 > **Fecha:** 2026-09-23
 > **Objetivo:** Portar a Next.js las cinco pantallas de `references/Arcade E1230.dc.html` (Biblioteca, Detalle, Reproductor, Autenticación y Salón de la Fama) con datos e interacciones simuladas y sin ningún juego real.
