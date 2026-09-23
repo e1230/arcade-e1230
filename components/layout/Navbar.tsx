@@ -5,23 +5,8 @@ import { usePathname } from "next/navigation";
 import { Logo } from "@/components/ui/Logo";
 import { NeonButton } from "@/components/ui/NeonButton";
 import { MobileMenu } from "@/components/layout/MobileMenu";
+import { NAV_LINKS, getActiveHref } from "@/components/layout/nav-links";
 import { getPlayerName, useSession } from "@/lib/session";
-
-interface NavLink {
-  href: string;
-  label: string;
-}
-
-const NAV_LINKS: NavLink[] = [
-  { href: "/", label: "Biblioteca" },
-  { href: "/hall-of-fame", label: "Salón de la Fama" },
-];
-
-function getActiveHref(pathname: string): string | null {
-  if (pathname === "/login") return null;
-  if (pathname === "/hall-of-fame") return "/hall-of-fame";
-  return "/";
-}
 
 export function Navbar() {
   const pathname = usePathname();
