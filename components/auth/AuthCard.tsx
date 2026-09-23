@@ -7,16 +7,20 @@ import { Logo } from "@/components/ui/Logo";
 import { NeonButton } from "@/components/ui/NeonButton";
 import { useSession } from "@/lib/session";
 
-type AuthTab = "login" | "register";
+export type AuthTab = "login" | "register";
+
+interface AuthCardProps {
+  initialTab?: AuthTab;
+}
 
 const ACTIVE_TAB_CLASS = "bg-cyan px-1.5 py-3.5 font-pixel text-[9px] leading-relaxed text-background";
 const INACTIVE_TAB_CLASS =
   "bg-transparent px-1.5 py-3.5 font-pixel text-[9px] leading-relaxed text-muted";
 
-export function AuthCard() {
+export function AuthCard({ initialTab = "login" }: AuthCardProps) {
   const router = useRouter();
   const { signIn } = useSession();
-  const [tab, setTab] = useState<AuthTab>("login");
+  const [tab, setTab] = useState<AuthTab>(initialTab);
   const [form, setForm] = useState({ user: "", pass: "", email: "" });
   const [error, setError] = useState("");
 
