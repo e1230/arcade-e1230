@@ -1,4 +1,5 @@
 import { FeatureGrid } from "@/components/home/FeatureGrid";
+import { GamesRail } from "@/components/home/GamesRail";
 import { HomeHero } from "@/components/home/HomeHero";
 
 export default function Home() {
@@ -6,6 +7,7 @@ export default function Home() {
     <div>
       <HomeHero />
       <FeatureGrid />
+      <GamesRail />
     </div>
   );
 }
