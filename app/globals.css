@@ -273,3 +273,20 @@ textarea::placeholder {
     transform: none;
   }
 }
+
+/*
+ * Accesibilidad de movimiento: apaga solo las animaciones en bucle (loop infinito).
+ * Las animaciones de una sola pasada (fade, row, slide, pop) siguen activas
+ * porque no generan el parpadeo continuo que prefers-reduced-motion busca evitar.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .animate-grad,
+  .animate-flicker,
+  .animate-blink,
+  .animate-grid,
+  .animate-pulse-neon,
+  .animate-pix,
+  .animate-wipe {
+    animation: none;
+  }
+}

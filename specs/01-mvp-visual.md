@@ -1,6 +1,6 @@
 # SPEC 01 — MVP visual de Arcade E1230
 
-> **Estado:** Aprobado
+> **Estado:** Terminado
 > **Depende de:** Ninguno
 > **Fecha:** 2026-09-23
 > **Objetivo:** Portar a Next.js las cinco pantallas de `references/Arcade E1230.dc.html` (Biblioteca, Detalle, Reproductor, Autenticación y Salón de la Fama) con datos e interacciones simuladas y sin ningún juego real.
@@ -273,11 +273,11 @@ Cada paso deja la app compilando (`npx tsc --noEmit`) y corriendo con `npm run d
 
 **Generales**
 
-- [ ] `npm run build` termina sin errores.
-- [ ] `npm run lint` termina sin errores.
-- [ ] Al recorrer las cinco pantallas, la consola del navegador no muestra errores ni advertencias de hidratación.
-- [ ] `/` ya no muestra nada del scaffold (logo de Next, «To get started», botones Deploy/Documentation).
-- [ ] `<html>` tiene `lang="es"`.
+- [x] `npm run build` termina sin errores.
+- [x] `npm run lint` termina sin errores.
+- [x] Al recorrer las cinco pantallas, la consola del navegador no muestra errores ni advertencias de hidratación.
+- [x] `/` ya no muestra nada del scaffold (logo de Next, «To get started», botones Deploy/Documentation).
+- [x] `<html>` tiene `lang="es"`.
 - [ ] Las puntuaciones usan formato `es-MX`: el primer puesto de ARKANOID se muestra como `42,000`.
 - [ ] `grep -rn "Introduce" app components lib` no devuelve resultados.
 

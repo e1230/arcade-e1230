@@ -6,7 +6,33 @@ Este archivo le da contexto a Claude Code (claude.ai/code) al trabajar en este r
 
 ## Proyecto
 
-Arcade E1230 es una plataforma online para jugar y competir por la mayor cantidad de puntos. Por ahora es el scaffold recién creado por Create Next App (solo existen `app/layout.tsx`, `app/page.tsx` y `app/globals.css`); las funcionalidades reales todavía no están construidas. El README y los specs están escritos en español, así que las nuevas specs también deben escribirse en español.
+Arcade E1230 es una plataforma online para jugar y competir por la mayor cantidad de puntos. El MVP visual (spec `specs/01-mvp-visual.md`) ya está implementado: las cinco pantallas de `references/Arcade E1230.dc.html` están portadas a App Router con datos e interacciones simuladas y sin ningún juego real. El README y los specs están escritos en español, así que las nuevas specs también deben escribirse en español.
+
+### Rutas
+
+- `/` — Biblioteca: hero animado, buscador, chips de categoría y grilla de 8 tarjetas con tilt 3D.
+- `/games/[id]` — Detalle del juego, con el ranking de mejores puntuaciones.
+- `/games/[id]/play` — Reproductor: HUD, gabinete CRT, carga simulada, pausa y partida simulada con modal de fin de juego.
+- `/login` — Autenticación simulada (usuario/contraseña, Google, GitHub, invitado).
+- `/hall-of-fame` — Salón de la Fama con pestañas por juego y marca personal.
+- `app/not-found.tsx` — 404 temática para cualquier URL desconocida (incluidos ids de juego inexistentes).
+
+### Estructura
+
+- `components/layout/` — `BackgroundEffects`, `Navbar`, `MobileMenu`.
+- `components/ui/` — `Logo`, `NeonButton`, `rank-styles.ts`.
+- `components/library/` — `LibraryHero`, `LibraryView`, `SearchBar`, `CategoryFilter`, `GameCard`.
+- `components/game/` — `GameCover`, `PlayingAs`, `DetailLeaderboard`, `PlayerView`, `PlayerHud`, `CrtScreen`, `PixelLoader`, `GameOverModal`.
+- `components/auth/` — `AuthCard`, `AuthField`.
+- `components/hall-of-fame/` — `HallOfFameView`, `GameTabs`, `HallOfFameTable`.
+- `lib/` — `format.ts`, `games.ts`, `scores.ts`, `storage.ts`, `session.ts`, `local-scores.ts`.
+
+### Persistencia simulada (localStorage)
+
+- `e1230_user` — sesión simulada (`SessionUser`): login, registro, Google, GitHub e invitado.
+- `e1230_scores` — puntuaciones locales por juego, mezcladas con los rankings mock deterministas de `lib/scores.ts`.
+
+Autenticación real, backend y ranking global en servidor quedan fuera de este spec; ver la sección «Fuera de alcance» de `specs/01-mvp-visual.md`.
 
 ## Comandos
 
