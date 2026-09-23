@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;background:#0a0a0f;color:#e6f7ff;font-family:'Courier Prime',monospace;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#00f5ff;text-decoration:none}a:hover{color:#ff006e}
+input::placeholder{color:#5c6b7a}
+@keyframes e-fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes e-grad{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+@keyframes e-flicker{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:.35}}
+@keyframes e-blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes e-grid{from{background-position:0 0}to{background-position:0 60px}}
+@keyframes e-pulse{0%,100%{box-shadow:0 0 12px #ff006e,0 0 28px rgba(255,0,110,.5)}50%{box-shadow:0 0 22px #ff006e,0 0 60px rgba(255,0,110,.85)}}
+@keyframes e-row{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+@keyframes e-slide{from{transform:translateX(100%)}to{transform:none}}
+@keyframes e-pix{0%,100%{background:#00f5ff}50%{background:#1a1a24}}
+@keyframes e-wipe{from{top:-10%}to{top:110%}}
+@keyframes e-pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="min-height:100vh;position:relative;overflow-x:hidden;background:#0a0a0f">
+  <sc-if value="{{ showGrid }}" hint-placeholder-val="{{ true }}">
+    <div style="position:fixed;left:-50%;right:-50%;bottom:-10vh;height:60vh;pointer-events:none;z-index:0;transform:perspective(420px) rotateX(62deg);transform-origin:50% 100%;background-image:linear-gradient(rgba(255,0,110,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,.25) 1px,transparent 1px);background-size:60px 60px;animation:e-grid 2.4s linear infinite;-webkit-mask-image:linear-gradient(to top,#000 10%,transparent 90%);mask-image:linear-gradient(to top,#000 10%,transparent 90%)"></div>
+  </sc-if>
+  <div style="position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,245,255,.08),transparent 60%)"></div>
+
+  <nav style="position:sticky;top:0;z-index:40;background:rgba(10,10,15,.88);backdrop-filter:blur(8px);border-bottom:1px solid rgba(0,245,255,.25)">
+    <div style="max-width:1280px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:24px">
+      <button onClick="{{ goHome }}" style="background:none;border:0;padding:0;cursor:pointer;font-family:'Press Start 2P',monospace;font-size:14px;color:#00f5ff;text-shadow:0 0 6px #00f5ff,0 0 16px rgba(0,245,255,.6);letter-spacing:1px">ARCADE <span style="color:#ff006e;text-shadow:0 0 6px #ff006e">E1230</span></button>
+      <sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;gap:28px;margin-left:12px">
+          <sc-for list="{{ navLinks }}" as="l" hint-placeholder-count="2">
+            <button onClick="{{ l.go }}" style="background:none;border:0;border-bottom:2px solid {{ l.bc }};padding:6px 0;cursor:pointer;font-family:'Courier Prime',monospace;font-weight:700;font-size:16px;color:{{ l.color }};box-shadow:{{ l.glow }}" style-hover="color:#00f5ff">{{ l.label }}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <div style="flex:1"></div>
+      <sc-if value="{{ notMobile }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ goAuth }}" style="font-family:'Press Start 2P',monospace;font-size:10px;padding:10px 14px;background:transparent;color:#f5ff00;border:2px solid #f5ff00;cursor:pointer;box-shadow:0 0 8px rgba(245,255,0,.4)" style-hover="background:#f5ff00;color:#0a0a0f;box-shadow:0 0 18px #f5ff00" style-active="transform:scale(.94) translateY(2px)">INICIAR SESIÓN</button>
+        </sc-if>
+        <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#ff006e;color:#0a0a0f;font-family:'Press Start 2P',monospace;font-size:14px;box-shadow:0 0 12px #ff006e">{{ userInitial }}</div>
+            <div style="display:flex;flex-direction:column;line-height:1.2">
+              <span style="font-weight:700;font-size:14px;color:#e6f7ff">{{ userName }}</span>
+              <button onClick="{{ logout }}" style="background:none;border:0;padding:0;text-align:left;cursor:pointer;font-family:'Courier Prime',monospace;font-size:12px;color:#8a9bb0" style-hover="color:#ff006e">cerrar sesión</button>
+            </div>
+          </div>
+        </sc-if>
+      </sc-if>
+      <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ toggleMenu }}" aria-label="Menú" style="width:44px;height:44px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;background:transparent;border:2px solid #00f5ff;cursor:pointer;box-shadow:0 0 8px rgba(0,245,255,.4)">
+          <span style="width:20px;height:3px;background:#00f5ff"></span><span style="width:20px;height:3px;background:#00f5ff"></span><span style="width:20px;height:3px;background:#00f5ff"></span>
+        </button>
+      </sc-if>
+    </div>
+  </nav>
+
+  <sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ toggleMenu }}" style="position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6)"></div>
+    <div style="position:fixed;top:0;right:0;bottom:0;width:78%;max-width:320px;z-index:51;background:#0d0d15;border-left:2px solid #ff006e;box-shadow:-10px 0 40px rgba(255,0,110,.3);padding:28px 24px;display:flex;flex-direction:column;gap:22px;animation:e-slide .22s ease-out">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-family:'Press Start 2P',monospace;font-size:10px;color:#ff006e">MENÚ</span>
+        <button onClick="{{ toggleMenu }}" style="width:44px;height:44px;background:none;border:2px solid #ff006e;color:#ff006e;font-family:'Press Start 2P',monospace;font-size:12px;cursor:pointer">X</button>
+      </div>
+      <sc-for list="{{ navLinks }}" as="l" hint-placeholder-count="2">
+        <button onClick="{{ l.go }}" style="text-align:left;background:none;border:0;border-left:3px solid {{ l.bc }};padding:10px 14px;cursor:pointer;font-family:'Courier Prime',monospace;font-weight:700;font-size:20px;color:{{ l.color }}">{{ l.label }}</button>
+      </sc-for>
+      <div style="height:1px;background:rgba(0,245,255,.2)"></div>
+      <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ goAuth }}" style="font-family:'Press Start 2P',monospace;font-size:11px;padding:16px;background:transparent;color:#f5ff00;border:2px solid #f5ff00;cursor:pointer">INICIAR SESIÓN</button>
+      </sc-if>
+      <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:#ff006e;color:#0a0a0f;font-family:'Press Start 2P',monospace;font-size:14px">{{ userInitial }}</div>
+          <span style="font-weight:700;font-size:16px">{{ userName }}</span>
+        </div>
+        <button onClick="{{ logout }}" style="font-family:'Courier Prime',monospace;font-size:15px;padding:12px;background:transparent;color:#8a9bb0;border:1px solid #333;cursor:pointer">Cerrar sesión</button>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <main style="position:relative;z-index:1">
+    <!-- HOME -->
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+      <div style="max-width:1280px;margin:0 auto;padding:56px 20px 120px;animation:e-fade .3s ease-out">
+        <header style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:22px;margin-bottom:48px">
+          <h1 style="margin:0;font-family:'Press Start 2P',monospace;font-size:clamp(28px,7vw,72px);line-height:1.15;letter-spacing:2px;background:linear-gradient(90deg,#00f5ff,#ff006e,#f5ff00,#00f5ff);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 10px rgba(0,245,255,.55)) drop-shadow(0 0 24px rgba(255,0,110,.35));animation:e-grad 6s linear infinite,e-flicker 5s infinite">ARCADE E1230</h1>
+          <p style="margin:0;font-family:'Press Start 2P',monospace;font-size:clamp(10px,1.6vw,14px);color:#f5ff00;text-shadow:0 0 8px rgba(245,255,0,.7);animation:e-blink 1.2s steps(1) infinite">INSERTA UNA MONEDA PARA JUGAR</p>
+        </header>
+
+        <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:32px">
+          <div style="flex:1 1 280px;position:relative">
+            <input value="{{ q }}" onChange="{{ onSearch }}" placeholder="Buscar juego por nombre o categoría…" style="width:100%;padding:14px 16px 14px 44px;background:#0d0d15;border:2px solid rgba(0,245,255,.5);color:#e6f7ff;font-family:'Courier Prime',monospace;font-size:16px;outline:none" style-focus="border-color:#00f5ff;box-shadow:0 0 14px rgba(0,245,255,.55)">
+            <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-family:'Press Start 2P',monospace;font-size:12px;color:#00f5ff">&gt;</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <sc-for list="{{ cats }}" as="c" hint-placeholder-count="5">
+              <button onClick="{{ c.pick }}" style="padding:10px 14px;background:{{ c.bg }};color:{{ c.color }};border:1px solid {{ c.border }};font-family:'Courier Prime',monospace;font-weight:700;font-size:14px;cursor:pointer" style-active="transform:scale(.94)">{{ c.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+          <p style="text-align:center;padding:60px 0;font-family:'Press Start 2P',monospace;font-size:12px;color:#8a9bb0;line-height:2">NINGÚN JUEGO COINCIDE CON TU BÚSQUEDA</p>
+        </sc-if>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:28px;perspective:1000px">
+          <sc-for list="{{ cards }}" as="c" hint-placeholder-count="8">
+            <article onMouseMove="{{ c.onMove }}" onMouseLeave="{{ c.onLeave }}" style="display:flex;flex-direction:column;background:#0d0d15;border:2px solid {{ c.border }};box-shadow:{{ c.shadow }};transform:{{ c.tf }};transition:transform .15s ease-out,box-shadow .2s,border-color .2s;transform-style:preserve-3d">
+              <div style="position:relative;aspect-ratio:4/3;overflow:hidden;background:repeating-linear-gradient(135deg,{{ c.tint }} 0 10px,transparent 10px 20px),#11111a;border-bottom:2px solid {{ c.border }}">
+                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;font-size:54px;color:{{ c.color }};text-shadow:0 0 16px {{ c.color }}">{{ c.initial }}</div>
+                <span style="position:absolute;left:10px;bottom:8px;font-family:'Courier Prime',monospace;font-size:12px;color:#8a9bb0">portada: {{ c.id }}</span>
+                <span style="position:absolute;right:10px;top:10px;padding:4px 8px;background:#0a0a0f;border:1px solid {{ c.color }};font-size:12px;font-weight:700;color:{{ c.color }}">{{ c.cat }}</span>
+              </div>
+              <div style="padding:18px;display:flex;flex-direction:column;gap:12px;flex:1">
+                <h3 style="margin:0;font-family:'Press Start 2P',monospace;font-size:14px;line-height:1.4;color:#fff;text-shadow:0 0 8px {{ c.color }}">{{ c.title }}</h3>
+                <p style="margin:0;font-size:15px;line-height:1.4;color:#b9c6d4;text-wrap:pretty">{{ c.short }}</p>
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:rgba(245,255,0,.06);border:1px dashed rgba(245,255,0,.45)">
+                  <span style="font-size:12px;font-weight:700;color:#f5ff00">MEJOR PUNTUACIÓN</span>
+                  <span style="font-family:'Press Start 2P',monospace;font-size:11px;color:#f5ff00;text-shadow:0 0 6px rgba(245,255,0,.7)">{{ c.best }}</span>
+                </div>
+                <div style="flex:1"></div>
+                <button onClick="{{ c.open }}" style="padding:14px;background:transparent;color:{{ c.color }};border:2px solid {{ c.color }};font-family:'Press Start 2P',monospace;font-size:12px;cursor:pointer;transition:all .15s" style-hover="background:{{ c.color }};color:#0a0a0f;box-shadow:0 0 20px {{ c.color }}" style-active="transform:scale(.95) translateY(2px)">JUGAR</button>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- DETAIL -->
+    <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1200px;margin:0 auto;padding:40px 20px 120px;animation:e-fade .3s ease-out">
+        <button onClick="{{ goHome }}" style="margin-bottom:28px;padding:10px 14px;background:transparent;color:#8a9bb0;border:1px solid #2a2a38;font-family:'Courier Prime',monospace;font-weight:700;font-size:14px;cursor:pointer" style-hover="color:#00f5ff;border-color:#00f5ff" style-active="transform:scale(.95)">&lt; VOLVER AL INICIO</button>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:36px;align-items:start">
+          <section style="display:flex;flex-direction:column;gap:24px">
+            <span style="align-self:flex-start;padding:5px 10px;border:1px solid {{ g.color }};color:{{ g.color }};font-weight:700;font-size:13px">{{ g.cat }}</span>
+            <h1 style="margin:0;font-family:'Press Start 2P',monospace;font-size:clamp(26px,5vw,52px);line-height:1.2;color:#fff;text-shadow:0 0 10px {{ g.color }},0 0 30px {{ g.color }}">{{ g.title }}</h1>
+            <div style="position:relative;aspect-ratio:16/9;background:repeating-linear-gradient(135deg,{{ g.tint }} 0 12px,transparent 12px 24px),#11111a;border:2px solid {{ g.color }};box-shadow:0 0 24px {{ g.tint }}">
+              <span style="position:absolute;left:12px;bottom:10px;font-size:13px;color:#8a9bb0">captura del juego: {{ g.id }}</span>
+            </div>
+            <p style="margin:0;font-size:18px;line-height:1.6;color:#cdd8e4;max-width:60ch;text-wrap:pretty">{{ g.long }}</p>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+              <button onClick="{{ launch }}" style="padding:22px 34px;background:#ff006e;color:#0a0a0f;border:0;font-family:'Press Start 2P',monospace;font-size:16px;cursor:pointer;animation:e-pulse 1.6s ease-in-out infinite" style-active="transform:scale(.95) translateY(3px)">JUGAR AHORA</button>
+              <button onClick="{{ goHome }}" style="padding:20px 22px;background:transparent;color:#00f5ff;border:2px solid #00f5ff;font-family:'Press Start 2P',monospace;font-size:11px;cursor:pointer" style-hover="box-shadow:0 0 16px #00f5ff" style-active="transform:scale(.95)">VOLVER AL INICIO</button>
+            </div>
+            <p style="margin:0;font-size:14px;color:#8a9bb0">Jugando como <strong style="color:#e6f7ff">{{ playerName }}</strong>{{ guestNote }}</p>
+          </section>
+          <aside style="background:#0d0d15;border:2px solid rgba(0,245,255,.6);box-shadow:0 0 20px rgba(0,245,255,.25),inset 0 0 30px rgba(0,245,255,.06)">
+            <h2 style="margin:0;padding:18px 20px;border-bottom:1px solid rgba(0,245,255,.3);font-family:'Press Start 2P',monospace;font-size:12px;color:#00f5ff;text-shadow:0 0 8px #00f5ff">MEJORES PUNTUACIONES</h2>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ detailRows }}" as="r" hint-placeholder-count="10">
+                <div style="display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 20px;border-bottom:1px solid #1a1a26;background:{{ r.bg }};animation:e-row .35s ease-out both;animation-delay:{{ r.delay }}">
+                  <span style="font-family:'Press Start 2P',monospace;font-size:11px;color:{{ r.color }};text-shadow:{{ r.glow }}">{{ r.rank }}</span>
+                  <div style="display:flex;flex-direction:column;min-width:0">
+                    <span style="font-weight:700;font-size:15px;color:#e6f7ff;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span>
+                    <span style="font-size:12px;color:#6d7d90">{{ r.date }}</span>
+                  </div>
+                  <span style="font-family:'Press Start 2P',monospace;font-size:11px;color:{{ r.color }}">{{ r.score }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- PLAYER -->
+    <sc-if value="{{ isPlay }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:860px;margin:0 auto;padding:28px 16px 80px;display:flex;flex-direction:column;gap:18px;animation:e-fade .25s ease-out">
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+          <span style="font-family:'Press Start 2P',monospace;font-size:13px;color:#fff;text-shadow:0 0 8px {{ g.color }}">{{ g.title }}</span>
+          <div style="display:flex;gap:10px">
+            <button onClick="{{ togglePause }}" style="padding:10px 14px;background:transparent;color:#f5ff00;border:2px solid #f5ff00;font-family:'Press Start 2P',monospace;font-size:10px;cursor:pointer" style-hover="box-shadow:0 0 12px #f5ff00" style-active="transform:scale(.94)">{{ pauseLabel }}</button>
+            <button onClick="{{ exitGame }}" style="padding:10px 14px;background:transparent;color:#ff006e;border:2px solid #ff006e;font-family:'Press Start 2P',monospace;font-size:10px;cursor:pointer" style-hover="box-shadow:0 0 12px #ff006e" style-active="transform:scale(.94)">SALIR</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:rgba(0,245,255,.3);border:1px solid rgba(0,245,255,.3)">
+          <div style="background:#0d0d15;padding:10px 14px;display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:700;color:#8a9bb0">PUNTUACIÓN</span><span style="font-family:'Press Start 2P',monospace;font-size:16px;color:#f5ff00;text-shadow:0 0 8px rgba(245,255,0,.7)">{{ scoreFmt }}</span></div>
+          <div style="background:#0d0d15;padding:10px 14px;display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:700;color:#8a9bb0">VIDAS</span><span style="font-family:'Press Start 2P',monospace;font-size:16px;color:#ff006e;text-shadow:0 0 8px #ff006e;letter-spacing:4px">{{ livesStr }}</span></div>
+          <div style="background:#0d0d15;padding:10px 14px;display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:700;color:#8a9bb0">NIVEL</span><span style="font-family:'Press Start 2P',monospace;font-size:16px;color:#00f5ff;text-shadow:0 0 8px #00f5ff">{{ levelStr }}</span></div>
+          <div style="background:#0d0d15;padding:10px 14px;display:flex;flex-direction:column;gap:6px"><span style="font-size:12px;font-weight:700;color:#8a9bb0">JUGADOR</span><span style="font-weight:700;font-size:16px;color:#e6f7ff;overflow:hidden;text-overflow:ellipsis">{{ playerName }}</span></div>
+        </div>
+        <div style="padding:clamp(14px,3vw,30px);background:linear-gradient(160deg,#1c1c26,#0e0e14);border-radius:30px;box-shadow:0 20px 60px rgba(0,0,0,.7),inset 0 2px 0 rgba(255,255,255,.06),0 0 40px rgba(0,245,255,.12)">
+          <div style="position:relative;aspect-ratio:4/3;overflow:hidden;background:#05050a;border-radius:26px / 36px;box-shadow:inset 0 0 50px rgba(0,0,0,.9),0 0 0 3px #050507">
+            <sc-if value="{{ isSnake }}" hint-placeholder-val="{{ true }}">
+              <canvas ref="{{ canvasRef }}" width="480" height="360" style="display:block;width:100%;height:100%;image-rendering:pixelated"></canvas>
+            </sc-if>
+            <sc-if value="{{ showExternal }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;background:repeating-linear-gradient(135deg,rgba(0,245,255,.05) 0 10px,transparent 10px 20px)">
+                <span style="font-family:'Press Start 2P',monospace;font-size:11px;color:#00f5ff">IFRAME SANDBOX</span>
+                <code style="font-size:15px;color:#e6f7ff;background:#0d0d15;padding:8px 12px;border:1px solid #2a2a38">juegos/{{ g.id }}.html</code>
+                <p style="margin:0;max-width:44ch;font-size:14px;line-height:1.5;color:#8a9bb0">Coloca aquí el archivo HTML del juego. Envía la puntuación con postMessage({ tipo: 'puntuacion', valor }) y el final con { tipo: 'fin' }.</p>
+                <button onClick="{{ simulate }}" style="padding:12px 16px;background:transparent;color:#f5ff00;border:2px solid #f5ff00;font-family:'Press Start 2P',monospace;font-size:10px;cursor:pointer" style-active="transform:scale(.94)">SIMULAR PARTIDA</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;inset:0;z-index:3;background:#05050a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px">
+                <div style="display:grid;grid-template-columns:repeat(3,14px);gap:4px">
+                  <span style="width:14px;height:14px;animation:e-pix .9s 0s infinite"></span><span style="width:14px;height:14px;animation:e-pix .9s .1s infinite"></span><span style="width:14px;height:14px;animation:e-pix .9s .2s infinite"></span>
+                  <span style="width:14px;height:14px;animation:e-pix .9s .7s infinite"></span><span style="width:14px;height:14px"></span><span style="width:14px;height:14px;animation:e-pix .9s .3s infinite"></span>
+                  <span style="width:14px;height:14px;animation:e-pix .9s .6s infinite"></span><span style="width:14px;height:14px;animation:e-pix .9s .5s infinite"></span><span style="width:14px;height:14px;animation:e-pix .9s .4s infinite"></span>
+                </div>
+                <span style="font-family:'Press Start 2P',monospace;font-size:12px;color:#00f5ff;animation:e-blink .8s steps(1) infinite">CARGANDO…</span>
+                <div style="position:absolute;left:0;right:0;height:10%;background:linear-gradient(transparent,rgba(0,245,255,.25),transparent);animation:e-wipe 1.1s linear infinite"></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ paused }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;inset:0;z-index:3;background:rgba(5,5,10,.75);display:flex;align-items:center;justify-content:center">
+                <span style="font-family:'Press Start 2P',monospace;font-size:24px;color:#f5ff00;text-shadow:0 0 12px #f5ff00;animation:e-blink 1s steps(1) infinite">PAUSA</span>
+              </div>
+            </sc-if>
+            <div style="position:absolute;inset:0;z-index:4;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.65) 100%)"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:0 6px">
+            <span style="font-family:'Press Start 2P',monospace;font-size:9px;color:#3c3c4c">E1230-CRT</span>
+            <span style="width:10px;height:10px;border-radius:50%;background:#00f5ff;box-shadow:0 0 10px #00f5ff"></span>
+          </div>
+        </div>
+        <sc-if value="{{ showPad }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,56px);gap:8px;justify-content:center">
+            <span></span><button onClick="{{ padUp }}" style="background:#0d0d15;border:2px solid #00f5ff;color:#00f5ff;font-family:'Press Start 2P',monospace;font-size:14px">▲</button><span></span>
+            <button onClick="{{ padLeft }}" style="background:#0d0d15;border:2px solid #00f5ff;color:#00f5ff;font-family:'Press Start 2P',monospace;font-size:14px">◀</button><button onClick="{{ padDown }}" style="background:#0d0d15;border:2px solid #00f5ff;color:#00f5ff;font-family:'Press Start 2P',monospace;font-size:14px">▼</button><button onClick="{{ padRight }}" style="background:#0d0d15;border:2px solid #00f5ff;color:#00f5ff;font-family:'Press Start 2P',monospace;font-size:14px">▶</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isSnakeDesk }}" hint-placeholder-val="{{ false }}">
+          <p style="margin:0;text-align:center;font-size:14px;color:#6d7d90">Flechas o WASD para moverte · P para pausar</p>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ over }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed;inset:0;z-index:60;background:rgba(5,5,10,.86);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px">
+          <div style="width:100%;max-width:460px;background:#0d0d15;border:2px solid #ff006e;box-shadow:0 0 40px rgba(255,0,110,.5);padding:36px 28px;display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center;animation:e-pop .25s ease-out">
+            <h2 style="margin:0;font-family:'Press Start 2P',monospace;font-size:clamp(20px,5vw,28px);line-height:1.3;color:#ff006e;text-shadow:0 0 10px #ff006e,0 0 30px rgba(255,0,110,.6)">FIN DEL JUEGO</h2>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <span style="font-size:13px;font-weight:700;color:#8a9bb0">PUNTUACIÓN FINAL</span>
+              <span style="font-family:'Press Start 2P',monospace;font-size:28px;color:#f5ff00;text-shadow:0 0 12px #f5ff00">{{ scoreFmt }}</span>
+            </div>
+            <sc-if value="{{ canSave }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ save }}" style="width:100%;padding:16px;background:#f5ff00;color:#0a0a0f;border:0;font-family:'Press Start 2P',monospace;font-size:12px;cursor:pointer;box-shadow:0 0 18px rgba(245,255,0,.6)" style-active="transform:scale(.96) translateY(2px)">GUARDAR PUNTUACIÓN</button>
+              <sc-if value="{{ isGuest }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size:13px;color:#8a9bb0;margin-top:-10px">Como invitado, se guarda solo en este dispositivo.</span>
+              </sc-if>
+            </sc-if>
+            <sc-if value="{{ saved }}" hint-placeholder-val="{{ false }}">
+              <div style="min-height:24px;font-family:'Press Start 2P',monospace;font-size:13px;color:#00f5ff;text-shadow:0 0 8px #00f5ff">{{ typed }}<span style="animation:e-blink .6s steps(1) infinite">_</span></div>
+            </sc-if>
+            <div style="display:flex;flex-wrap:wrap;gap:12px;width:100%">
+              <button onClick="{{ launch }}" style="flex:1 1 160px;padding:14px;background:transparent;color:#00f5ff;border:2px solid #00f5ff;font-family:'Press Start 2P',monospace;font-size:10px;cursor:pointer" style-hover="box-shadow:0 0 14px #00f5ff" style-active="transform:scale(.95)">JUGAR DE NUEVO</button>
+              <button onClick="{{ goHome }}" style="flex:1 1 160px;padding:14px;background:transparent;color:#e6f7ff;border:2px solid #3a3a4c;font-family:'Press Start 2P',monospace;font-size:10px;cursor:pointer" style-hover="border-color:#e6f7ff" style-active="transform:scale(.95)">VOLVER AL INICIO</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </sc-if>
+
+    <!-- AUTH -->
+    <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ false }}">
+      <div style="min-height:calc(100vh - 80px);display:flex;align-items:center;justify-content:center;padding:40px 20px;animation:e-fade .3s ease-out">
+        <div style="width:100%;max-width:420px;background:rgba(13,13,21,.95);border:2px solid rgba(0,245,255,.6);box-shadow:0 0 30px rgba(0,245,255,.25);padding:34px 28px;display:flex;flex-direction:column;gap:22px">
+          <div style="text-align:center;font-family:'Press Start 2P',monospace;font-size:20px;line-height:1.3;color:#00f5ff;text-shadow:0 0 8px #00f5ff,0 0 20px rgba(0,245,255,.6);animation:e-flicker 6s infinite">ARCADE <span style="color:#ff006e;text-shadow:0 0 8px #ff006e">E1230</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid #2a2a38">
+            <sc-for list="{{ authTabs }}" as="t" hint-placeholder-count="2">
+              <button onClick="{{ t.pick }}" style="padding:13px 6px;background:{{ t.bg }};color:{{ t.color }};border:0;font-family:'Press Start 2P',monospace;font-size:9px;line-height:1.4;cursor:pointer">{{ t.label }}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <label style="display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:700;color:#8a9bb0">Usuario
+              <input value="{{ fUser }}" onChange="{{ onUser }}" placeholder="tu_alias" style="padding:13px 14px;background:#0a0a0f;border:2px solid rgba(0,245,255,.4);color:#e6f7ff;font-family:'Courier Prime',monospace;font-size:16px;outline:none" style-focus="border-color:#00f5ff;box-shadow:0 0 14px rgba(0,245,255,.6)">
+            </label>
+            <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
+              <label style="display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:700;color:#8a9bb0">Correo electrónico
+                <input type="email" value="{{ fEmail }}" onChange="{{ onEmail }}" placeholder="jugador@correo.com" style="padding:13px 14px;background:#0a0a0f;border:2px solid rgba(255,0,110,.4);color:#e6f7ff;font-family:'Courier Prime',monospace;font-size:16px;outline:none" style-focus="border-color:#ff006e;box-shadow:0 0 14px rgba(255,0,110,.6)">
+              </label>
+            </sc-if>
+            <label style="display:flex;flex-direction:column;gap:8px;font-size:14px;font-weight:700;color:#8a9bb0">Contraseña
+              <input type="password" value="{{ fPass }}" onChange="{{ onPass }}" placeholder="••••••••" style="padding:13px 14px;background:#0a0a0f;border:2px solid rgba(0,245,255,.4);color:#e6f7ff;font-family:'Courier Prime',monospace;font-size:16px;outline:none" style-focus="border-color:#00f5ff;box-shadow:0 0 14px rgba(0,245,255,.6)">
+            </label>
+            <sc-if value="{{ hasErr }}" hint-placeholder-val="{{ false }}">
+              <span style="font-size:14px;color:#ff006e">{{ authErr }}</span>
+            </sc-if>
+            <button onClick="{{ submitAuth }}" style="padding:16px;background:#00f5ff;color:#0a0a0f;border:0;font-family:'Press Start 2P',monospace;font-size:11px;cursor:pointer;box-shadow:0 0 16px rgba(0,245,255,.6)" style-hover="box-shadow:0 0 28px #00f5ff" style-active="transform:scale(.96) translateY(2px)">{{ submitLabel }}</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;color:#5c6b7a;font-size:13px"><span style="flex:1;height:1px;background:#2a2a38"></span>o continúa con<span style="flex:1;height:1px;background:#2a2a38"></span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <button onClick="{{ socialGoogle }}" style="padding:12px;background:transparent;color:#e6f7ff;border:1px solid #3a3a4c;font-family:'Courier Prime',monospace;font-weight:700;font-size:15px;cursor:pointer" style-hover="border-color:#e6f7ff" style-active="transform:scale(.96)">Google</button>
+            <button onClick="{{ socialGithub }}" style="padding:12px;background:transparent;color:#e6f7ff;border:1px solid #3a3a4c;font-family:'Courier Prime',monospace;font-weight:700;font-size:15px;cursor:pointer" style-hover="border-color:#e6f7ff" style-active="transform:scale(.96)">GitHub</button>
+          </div>
+          <button onClick="{{ guest }}" style="padding:14px;background:transparent;color:#f5ff00;border:2px dashed #f5ff00;font-family:'Press Start 2P',monospace;font-size:10px;line-height:1.5;cursor:pointer" style-hover="box-shadow:0 0 14px rgba(245,255,0,.6)" style-active="transform:scale(.96)">JUGAR COMO INVITADO</button>
+          <p style="margin:-10px 0 0;text-align:center;font-size:13px;color:#6d7d90">Sin cuenta: tus puntuaciones no se guardan en el ranking global.</p>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- HALL OF FAME -->
+    <sc-if value="{{ isFame }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:960px;margin:0 auto;padding:52px 20px 120px;animation:e-fade .3s ease-out">
+        <h1 style="margin:0 0 34px;text-align:center;font-family:'Press Start 2P',monospace;font-size:clamp(22px,5vw,44px);line-height:1.3;color:#f5ff00;text-shadow:0 0 10px #f5ff00,0 0 30px rgba(245,255,0,.5)">SALÓN DE LA FAMA</h1>
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:24px">
+          <sc-for list="{{ fameTabs }}" as="t" hint-placeholder-count="8">
+            <button onClick="{{ t.pick }}" style="flex:0 0 auto;padding:12px 14px;background:{{ t.bg }};color:{{ t.color }};border:1px solid {{ t.border }};font-family:'Press Start 2P',monospace;font-size:9px;cursor:pointer;box-shadow:{{ t.glow }}" style-active="transform:scale(.94)">{{ t.label }}</button>
+          </sc-for>
+        </div>
+        <div style="background:#0d0d15;border:2px solid rgba(0,245,255,.5);box-shadow:0 0 24px rgba(0,245,255,.2)">
+          <div style="display:grid;grid-template-columns:70px minmax(0,1fr) minmax(90px,auto) 110px;gap:12px;padding:14px 20px;border-bottom:1px solid rgba(0,245,255,.35);font-family:'Press Start 2P',monospace;font-size:9px;color:#00f5ff">
+            <span>RANGO</span><span>JUGADOR</span><span style="text-align:right">PUNTUACIÓN</span><span style="text-align:right">FECHA</span>
+          </div>
+          <sc-for list="{{ fameRows }}" as="r" hint-placeholder-count="10">
+            <div style="display:grid;grid-template-columns:70px minmax(0,1fr) minmax(90px,auto) 110px;gap:12px;align-items:center;padding:14px 20px;border-bottom:1px solid #1a1a26;border-left:3px solid {{ r.edge }};background:{{ r.bg }};animation:e-row .4s ease-out both;animation-delay:{{ r.delay }}">
+              <span style="font-family:'Press Start 2P',monospace;font-size:13px;color:{{ r.color }};text-shadow:{{ r.glow }}">{{ r.rank }}</span>
+              <span style="font-weight:700;font-size:16px;color:#e6f7ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.name }} <span style="font-size:12px;color:#ff006e">{{ r.tag }}</span></span>
+              <span style="text-align:right;font-family:'Press Start 2P',monospace;font-size:12px;color:{{ r.color }}">{{ r.score }}</span>
+              <span style="text-align:right;font-size:14px;color:#6d7d90">{{ r.date }}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ showPB }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:70px minmax(0,1fr) minmax(90px,auto) 110px;gap:12px;align-items:center;padding:16px 20px;background:rgba(255,0,110,.1);border-top:2px solid #ff006e;animation:e-row .4s .6s ease-out both">
+              <span style="font-family:'Press Start 2P',monospace;font-size:9px;line-height:1.5;color:#ff006e">TU MEJOR MARCA</span>
+              <span style="font-weight:700;font-size:16px;color:#e6f7ff">{{ userName }}</span>
+              <span style="text-align:right;font-family:'Press Start 2P',monospace;font-size:12px;color:#ff006e;text-shadow:0 0 8px #ff006e">{{ pbScore }}</span>
+              <span style="text-align:right;font-size:14px;color:#6d7d90">{{ pbDate }}</span>
+            </div>
+          </sc-if>
+        </div>
+        <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ true }}">
+          <p style="margin:18px 0 0;text-align:center;font-size:15px;color:#8a9bb0"><a href="#" onClick="{{ goAuthLink }}">Inicia sesión</a> para ver tu mejor marca destacada.</p>
+        </sc-if>
+      </div>
+    </sc-if>
+  </main>
+
+  <sc-if value="{{ showScan }}" hint-placeholder-val="{{ true }}">
+    <div style="position:fixed;inset:0;pointer-events:none;z-index:100;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px);mix-blend-mode:multiply"></div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;scanlines&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;perspectiveGrid&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;cardTilt&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const GAMES = [
+  { id: 'arkanoid', title: 'ARKANOID', cat: 'Clásicos', color: '#00f5ff', short: 'Rompe todos los ladrillos con tu nave y la bola.', long: 'Controla la nave Vaus y devuelve la bola de energía para destruir cada muro de ladrillos. Atrapa las cápsulas que caen para ensanchar la nave, disparar láseres o multiplicar las bolas. Cada fase es más rápida que la anterior.' },
+  { id: 'tetris', title: 'TETRIS', cat: 'Puzles', color: '#f5ff00', short: 'Encaja las piezas y limpia líneas sin parar.', long: 'Gira y coloca las piezas que caen para completar líneas horizontales. Cada línea eliminada suma puntos y acelera la caída. La partida termina cuando las piezas alcanzan el techo.' },
+  { id: 'snake', title: 'SNAKE', cat: 'Clásicos', color: '#ff006e', short: 'Come, crece y no te muerdas la cola.', long: 'Guía a la serpiente por la pantalla y come los píxeles para crecer. Cada cinco bocados subes de nivel y la serpiente va más rápido. Chocar con las paredes o contigo mismo te cuesta una vida.' },
+  { id: 'pacman', title: 'PAC-MAN', cat: 'Laberinto', color: '#f5ff00', short: 'Recorre el laberinto y esquiva a los fantasmas.', long: 'Come todos los puntos del laberinto mientras cuatro fantasmas te persiguen. Las píldoras de poder te permiten darles la vuelta y comértelos durante unos segundos. Las frutas dan puntos extra.' },
+  { id: 'invaders', title: 'SPACE INVADERS', cat: 'Disparos', color: '#00f5ff', short: 'Detén la invasión alienígena fila a fila.', long: 'Oleadas de alienígenas descienden hacia la Tierra. Muévete tras los escudos y dispara antes de que lleguen al suelo. Cuantos menos quedan, más rápido avanzan.' },
+  { id: 'asteroids', title: 'ASTEROIDS', cat: 'Disparos', color: '#ff006e', short: 'Pulveriza rocas espaciales en gravedad cero.', long: 'Pilota una nave en un campo de asteroides y dispárales para partirlos en fragmentos cada vez más pequeños. Usa el hiperespacio para escapar en el último segundo y vigila los platillos enemigos.' },
+  { id: 'frogger', title: 'FROGGER', cat: 'Clásicos', color: '#f5ff00', short: 'Cruza la carretera y el río sin perder ancas.', long: 'Lleva a cada rana hasta su refugio al otro lado de la pantalla. Primero esquiva el tráfico de la autopista y luego salta entre troncos y tortugas en el río. El tiempo corre en tu contra.' },
+  { id: 'galaga', title: 'GALAGA', cat: 'Disparos', color: '#00f5ff', short: 'Combate escuadrones que atacan en picado.', long: 'Formaciones de insectos espaciales se lanzan en picado contra tu caza. Deja que un jefe capture tu nave y rescátala para disparar con doble potencia. Las fases de desafío premian la precisión.' }
+];
+const CATS = ['Todos', 'Clásicos', 'Disparos', 'Puzles', 'Laberinto'];
+const NAMES = ['NEÓN_77', 'PIXELKID', 'LUNA.EXE', 'ROMBO', 'GLITCH', 'CHIPTUNE', 'VOXEL', 'ZETA-9', 'KAIROS', 'BYTEMAR', 'ATARIANA', 'OCHOBITS'];
+const COLS = 24, ROWS = 18, CELL = 20;
+const RANK = [
+  { color: '#ffd23f', glow: '0 0 8px #ffd23f,0 0 18px rgba(255,210,63,.6)', bg: 'rgba(255,210,63,.08)', edge: '#ffd23f' },
+  { color: '#d6e2ee', glow: '0 0 8px #d6e2ee,0 0 16px rgba(214,226,238,.5)', bg: 'rgba(214,226,238,.06)', edge: '#d6e2ee' },
+  { color: '#ff8c42', glow: '0 0 8px #ff8c42,0 0 16px rgba(255,140,66,.5)', bg: 'rgba(255,140,66,.07)', edge: '#ff8c42' }
+];
+const pad = n => String(n).padStart(2, '0');
+const fmt = n => n.toLocaleString('es-ES');
+const norm = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const tint = c => c === '#00f5ff' ? 'rgba(0,245,255,.14)' : c === '#ff006e' ? 'rgba(255,0,110,.16)' : 'rgba(245,255,0,.12)';
+function mock(gi) {
+  const base = 42000 + gi * 7300;
+  return Array.from({ length: 10 }, (_, i) => ({
+    name: NAMES[(i * 5 + gi * 3) % NAMES.length],
+    score: Math.round(base * (1 - i * 0.085) / 10) * 10,
+    date: pad(((i * 7 + gi * 3) % 28) + 1) + '/' + pad(9 - (i % 4)) + '/2026'
+  }));
+}
+
+class Component extends DCLogic {
+  state = { page: 'home', gameId: 'snake', user: null, q: '', cat: 'Todos', menuOpen: false, authTab: 'login',
+    form: { user: '', pass: '', email: '' }, authErr: '', tilt: null, fame: 'arkanoid',
+    score: 0, lives: 3, level: 1, paused: false, over: false, saved: false, typed: '', loading: false,
+    w: typeof window !== 'undefined' ? window.innerWidth : 1200, local: {} };
+  canvasRef = React.createRef();
+
+  componentDidMount() {
+    try {
+      const u = JSON.parse(localStorage.getItem('e1230_user') || 'null');
+      const l = JSON.parse(localStorage.getItem('e1230_scores') || '{}');
+      this.setState({ user: u, local: l });
+    } catch (e) {}
+    this.onResize = () => this.setState({ w: window.innerWidth });
+    this.onKey = e => this.handleKey(e);
+    // Juegos externos (iframe) informan su estado vía postMessage
+    this.onMsg = e => {
+      const d = e.data || {};
+      if (this.state.page !== 'play') return;
+      if (d.tipo === 'puntuacion') this.setState({ score: +d.valor || 0 });
+      if (d.tipo === 'fin') this.endGame();
+    };
+    window.addEventListener('resize', this.onResize);
+    window.addEventListener('keydown', this.onKey);
+    window.addEventListener('message', this.onMsg);
+  }
+  componentWillUnmount() {
+    this.stopGame();
+    window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('keydown', this.onKey);
+    window.removeEventListener('message', this.onMsg);
+  }
+
+  go(page, extra) {
+    this.stopGame();
+    this.setState({ page, menuOpen: false, over: false, paused: false, tilt: null, ...(extra || {}) });
+    window.scrollTo(0, 0);
+  }
+  persistUser(user) {
+    // Backend: con Supabase, la sesión la gestiona supabase.auth; aquí se simula en localStorage
+    localStorage.setItem('e1230_user', JSON.stringify(user));
+    this.setState({ user, authErr: '', form: { user: '', pass: '', email: '' } });
+    this.go('home');
+  }
+
+  launch() {
+    this.stopGame();
+    this.setState({ page: 'play', loading: true, score: 0, lives: 3, level: 1, paused: false, over: false, saved: false, typed: '' });
+    window.scrollTo(0, 0);
+    this.loadT = setTimeout(() => {
+      this.setState({ loading: false }, () => { if (this.state.gameId === 'snake') this.initSnake(); });
+    }, 1100);
+  }
+  stopGame() {
+    clearInterval(this.loop); this.loop = null;
+    clearInterval(this.sim); this.sim = null;
+    clearInterval(this.tw); clearTimeout(this.loadT);
+  }
+  endGame() {
+    clearInterval(this.loop); this.loop = null;
+    clearInterval(this.sim); this.sim = null;
+    this.setState({ over: true, paused: false });
+  }
+
+  rndFood() {
+    let f;
+    do { f = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) }; }
+    while (this.sn && this.sn.body.some(b => b.x === f.x && b.y === f.y));
+    return f;
+  }
+  resetSnake() {
+    this.sn.body = [{ x: 8, y: 9 }, { x: 7, y: 9 }, { x: 6, y: 9 }];
+    this.sn.dir = this.sn.next = { x: 1, y: 0 };
+  }
+  initSnake() {
+    this.sn = { body: [], eaten: 0 };
+    this.resetSnake();
+    this.sn.food = this.rndFood();
+    this.schedule();
+    this.draw();
+  }
+  schedule() {
+    clearInterval(this.loop);
+    this.loop = setInterval(() => this.tick(), Math.max(55, 150 - (this.state.level - 1) * 15));
+  }
+  tick() {
+    if (this.state.paused || this.state.over || !this.sn) return;
+    const s = this.sn; s.dir = s.next;
+    const h = { x: s.body[0].x + s.dir.x, y: s.body[0].y + s.dir.y };
+    if (h.x < 0 || h.x >= COLS || h.y < 0 || h.y >= ROWS || s.body.some(b => b.x === h.x && b.y === h.y)) {
+      const lives = this.state.lives - 1;
+      if (lives <= 0) { this.setState({ lives: 0 }); this.draw(true); this.endGame(); }
+      else { this.setState({ lives }); this.resetSnake(); this.draw(true); }
+      return;
+    }
+    s.body.unshift(h);
+    if (h.x === s.food.x && h.y === s.food.y) {
+      s.eaten++; s.food = this.rndFood();
+      const lvl = 1 + Math.floor(s.eaten / 5);
+      this.setState(st => ({ score: st.score + 10 * st.level }));
+      if (lvl !== this.state.level) this.setState({ level: lvl }, () => this.schedule());
+    } else s.body.pop();
+    this.draw();
+  }
+  draw(hit) {
+    const c = this.canvasRef.current; if (!c || !this.sn) return;
+    const x = c.getContext('2d');
+    x.fillStyle = hit ? '#2a0012' : '#05050a'; x.fillRect(0, 0, c.width, c.height);
+    x.strokeStyle = 'rgba(0,245,255,.06)'; x.lineWidth = 1;
+    for (let i = 0; i <= COLS; i++) { x.beginPath(); x.moveTo(i * CELL, 0); x.lineTo(i * CELL, c.height); x.stroke(); }
+    for (let j = 0; j <= ROWS; j++) { x.beginPath(); x.moveTo(0, j * CELL); x.lineTo(c.width, j * CELL); x.stroke(); }
+    x.shadowBlur = 14; x.shadowColor = '#ff006e'; x.fillStyle = '#ff006e';
+    x.fillRect(this.sn.food.x * CELL + 4, this.sn.food.y * CELL + 4, CELL - 8, CELL - 8);
+    x.shadowColor = '#00f5ff';
+    this.sn.body.forEach((b, i) => { x.fillStyle = i === 0 ? '#f5ff00' : '#00f5ff'; x.fillRect(b.x * CELL + 2, b.y * CELL + 2, CELL - 4, CELL - 4); });
+    x.shadowBlur = 0;
+  }
+  steer(dx, dy) {
+    if (!this.sn || this.state.paused) return;
+    const d = this.sn.dir;
+    if (d.x === -dx && d.y === -dy) return;
+    this.sn.next = { x: dx, y: dy };
+  }
+  handleKey(e) {
+    if (this.state.page !== 'play' || this.state.over) return;
+    const k = e.key.toLowerCase();
+    const map = { arrowup: [0, -1], w: [0, -1], arrowdown: [0, 1], s: [0, 1], arrowleft: [-1, 0], a: [-1, 0], arrowright: [1, 0], d: [1, 0] };
+    if (map[k]) { e.preventDefault(); this.steer(...map[k]); }
+    if (k === 'p') this.setState(s => ({ paused: !s.paused }));
+  }
+  simulate() {
+    if (this.sim) return;
+    let t = 0;
+    this.sim = setInterval(() => {
+      if (this.state.paused) return;
+      t++;
+      this.setState(s => ({ score: s.score + Math.floor(Math.random() * 90 + 10) * 10, level: 1 + Math.floor(t / 12) }));
+      if (t % 12 === 0) this.setState(s => ({ lives: s.lives - 1 }));
+      if (t >= 36) this.endGame();
+    }, 100);
+  }
+
+  playerName() { return this.state.user ? this.state.user.name : 'INVITADO'; }
+  today() { const d = new Date(); return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear(); }
+  save() {
+    const { gameId, score, user } = this.state;
+    const entry = { name: this.playerName(), score, date: this.today() };
+    if (user && !user.guest) {
+      // Backend: aquí se conectaría la API real, p. ej.
+      // await fetch('/api/scores', { method: 'POST', body: JSON.stringify({ gameId, ...entry }) })
+      // o supabase.from('scores').insert({ game_id: gameId, user_id, score })
+    }
+    const local = { ...this.state.local, [gameId]: [...(this.state.local[gameId] || []), entry] };
+    localStorage.setItem('e1230_scores', JSON.stringify(local));
+    this.setState({ local, saved: true, typed: '' });
+    const msg = 'PUNTUACIÓN GUARDADA'; let i = 0;
+    clearInterval(this.tw);
+    this.tw = setInterval(() => { i++; this.setState({ typed: msg.slice(0, i) }); if (i >= msg.length) clearInterval(this.tw); }, 60);
+  }
+
+  board(gid) {
+    const gi = GAMES.findIndex(g => g.id === gid);
+    const me = this.state.user && !this.state.user.guest ? this.state.user.name : null;
+    const all = [...mock(gi), ...(this.state.local[gid] || [])].sort((a, b) => b.score - a.score).slice(0, 10);
+    return all.map((e, i) => {
+      const r = RANK[i] || { color: '#e6f7ff', glow: 'none', bg: 'transparent', edge: 'transparent' };
+      const mine = me && e.name === me;
+      return { rank: pad(i + 1), name: e.name, score: fmt(e.score), date: e.date, color: r.color, glow: r.glow,
+        bg: mine ? 'rgba(255,0,110,.12)' : r.bg, edge: mine ? '#ff006e' : r.edge, tag: mine ? '· TÚ' : '', delay: (i * 0.06) + 's' };
+    });
+  }
+  best(gid) {
+    const gi = GAMES.findIndex(g => g.id === gid);
+    return Math.max(mock(gi)[0].score, ...(this.state.local[gid] || []).map(e => e.score));
+  }
+
+  renderVals() {
+    const s = this.state;
+    const isMobile = s.w < 760;
+    const tiltOn = this.props.cardTilt ?? true;
+    const g0 = GAMES.find(g => g.id === s.gameId);
+    const g = { ...g0, tint: tint(g0.color) };
+    const qn = norm(s.q.trim());
+    const list = GAMES.filter(g => (s.cat === 'Todos' || g.cat === s.cat) && (!qn || norm(g.title + ' ' + g.cat + ' ' + g.short).includes(qn)));
+    const cards = list.map(c => {
+      const hot = s.tilt && s.tilt.id === c.id;
+      return { ...c, initial: c.title[0], tint: tint(c.color), best: fmt(this.best(c.id)),
+        border: hot ? c.color : 'rgba(0,245,255,.22)',
+        shadow: hot ? `0 0 18px ${c.color},0 0 48px ${tint(c.color)},0 18px 40px rgba(0,0,0,.6)` : '0 0 0 rgba(0,0,0,0)',
+        tf: hot ? `translateY(-8px) scale(1.03) rotateX(${tiltOn ? s.tilt.rx : 0}deg) rotateY(${tiltOn ? s.tilt.ry : 0}deg)` : 'none',
+        onMove: e => { const r = e.currentTarget.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width - .5, py = (e.clientY - r.top) / r.height - .5; this.setState({ tilt: { id: c.id, rx: (-py * 10).toFixed(2), ry: (px * 12).toFixed(2) } }); },
+        onLeave: () => this.setState({ tilt: null }),
+        open: () => this.go('detail', { gameId: c.id }) };
+    });
+    const user = s.user;
+    const pbList = user && !user.guest ? (s.local[s.fame] || []).filter(e => e.name === user.name) : [];
+    const pb = pbList.sort((a, b) => b.score - a.score)[0];
+    const navActive = s.page === 'fame' ? 'fame' : (s.page === 'auth' ? '' : 'home');
+    return {
+      isMobile, notMobile: !isMobile, menuOpen: s.menuOpen && isMobile,
+      showScan: this.props.scanlines ?? true, showGrid: this.props.perspectiveGrid ?? true,
+      isHome: s.page === 'home', isDetail: s.page === 'detail', isPlay: s.page === 'play', isAuth: s.page === 'auth', isFame: s.page === 'fame',
+      loggedIn: !!user, loggedOut: !user, userName: user ? user.name : '', userInitial: user ? user.name[0] : '',
+      isGuest: !user || user.guest, playerName: this.playerName(), guestNote: user && !user.guest ? '' : ' · las puntuaciones solo se guardan en este dispositivo',
+      navLinks: [['home', 'Biblioteca'], ['fame', 'Salón de la Fama']].map(([id, label]) => ({ label, go: () => this.go(id),
+        bc: navActive === id ? '#00f5ff' : 'transparent', color: navActive === id ? '#00f5ff' : '#b9c6d4', glow: navActive === id ? '0 6px 12px -6px #00f5ff' : 'none' })),
+      goHome: () => this.go('home'), goAuth: () => this.go('auth'), goAuthLink: e => { e.preventDefault(); this.go('auth'); },
+      toggleMenu: () => this.setState(st => ({ menuOpen: !st.menuOpen })),
+      logout: () => { localStorage.removeItem('e1230_user'); this.setState({ user: null, menuOpen: false }); },
+      q: s.q, onSearch: e => this.setState({ q: e.target.value }),
+      cats: CATS.map(c => ({ label: c, pick: () => this.setState({ cat: c }), bg: s.cat === c ? '#ff006e' : 'transparent', color: s.cat === c ? '#0a0a0f' : '#b9c6d4', border: s.cat === c ? '#ff006e' : '#2a2a38' })),
+      cards, noResults: cards.length === 0,
+      g, launch: () => this.launch(),
+      detailRows: this.board(s.gameId),
+      isSnake: s.gameId === 'snake', showExternal: s.gameId !== 'snake' && !s.loading,
+      showPad: s.gameId === 'snake' && isMobile, isSnakeDesk: s.gameId === 'snake' && !isMobile,
+      padUp: () => this.steer(0, -1), padDown: () => this.steer(0, 1), padLeft: () => this.steer(-1, 0), padRight: () => this.steer(1, 0),
+      simulate: () => this.simulate(),
+      loading: s.loading, paused: s.paused, over: s.over, saved: s.saved, canSave: !s.saved, typed: s.typed,
+      scoreFmt: fmt(s.score), livesStr: '■'.repeat(Math.max(0, s.lives)) + '□'.repeat(Math.max(0, 3 - s.lives)), levelStr: pad(s.level),
+      pauseLabel: s.paused ? 'SEGUIR' : 'PAUSA',
+      togglePause: () => { if (!s.loading && !s.over) this.setState(st => ({ paused: !st.paused })); },
+      exitGame: () => this.go('detail'),
+      save: () => this.save(),
+      authTabs: [['login', 'INICIAR SESIÓN'], ['register', 'CREAR CUENTA']].map(([id, label]) => ({ label, pick: () => this.setState({ authTab: id, authErr: '' }),
+        bg: s.authTab === id ? '#00f5ff' : 'transparent', color: s.authTab === id ? '#0a0a0f' : '#8a9bb0' })),
+      isRegister: s.authTab === 'register', submitLabel: s.authTab === 'register' ? 'CREAR CUENTA' : 'ENTRAR',
+      fUser: s.form.user, fPass: s.form.pass, fEmail: s.form.email,
+      onUser: e => this.setState({ form: { ...s.form, user: e.target.value } }),
+      onPass: e => this.setState({ form: { ...s.form, pass: e.target.value } }),
+      onEmail: e => this.setState({ form: { ...s.form, email: e.target.value } }),
+      authErr: s.authErr, hasErr: !!s.authErr,
+      submitAuth: () => {
+        const f = s.form;
+        if (!f.user.trim()) return this.setState({ authErr: 'Introduce tu usuario.' });
+        if (s.authTab === 'register' && !/.+@.+\..+/.test(f.email)) return this.setState({ authErr: 'Introduce un correo electrónico válido.' });
+        if (f.pass.length < 4) return this.setState({ authErr: 'La contraseña debe tener al menos 4 caracteres.' });
+        // Backend: supabase.auth.signInWithPassword / signUp, o POST /api/auth/login
+        this.persistUser({ name: f.user.trim().toUpperCase().slice(0, 14), guest: false });
+      },
+      socialGoogle: () => this.persistUser({ name: 'JUGADOR_G', guest: false }),
+      socialGithub: () => this.persistUser({ name: 'JUGADOR_GH', guest: false }),
+      guest: () => this.persistUser({ name: 'INVITADO', guest: true }),
+      fameTabs: GAMES.map(t => ({ label: t.title, pick: () => this.setState({ fame: t.id }),
+        bg: s.fame === t.id ? 'rgba(245,255,0,.12)' : 'transparent', color: s.fame === t.id ? '#f5ff00' : '#8a9bb0',
+        border: s.fame === t.id ? '#f5ff00' : '#2a2a38', glow: s.fame === t.id ? '0 0 12px rgba(245,255,0,.45)' : 'none' })),
+      fameRows: s.page === 'fame' ? this.board(s.fame).map(r => ({ ...r, key: s.fame })) : [],
+      showPB: !!pb, pbScore: pb ? fmt(pb.score) : '', pbDate: pb ? pb.date : ''
+    };
+  }
+}
+</script>
+</body>
+</html>
