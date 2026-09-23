@@ -102,6 +102,7 @@
   --animate-float: e-float 6s ease-in-out infinite;
   --animate-bounce-arrow: e-bounce 1.6s ease-in-out infinite;
   --animate-tick: e-tick 0.36s ease-out both;
+  --animate-pulse-cyan: e-pulse-cyan 1.6s ease-in-out infinite;
 }
 
 /* Estilos base copiados de la referencia */
@@ -306,6 +307,17 @@ textarea::placeholder {
   }
 }
 
+/* Pulso cian: igual que e-pulse pero con el resplandor del acento cian en vez de rosa */
+@keyframes e-pulse-cyan {
+  0%,
+  100% {
+    box-shadow: 0 0 12px #00f5ff, 0 0 28px rgba(0, 245, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 22px #00f5ff, 0 0 60px rgba(0, 245, 255, 0.85);
+  }
+}
+
 /*
  * Accesibilidad de movimiento: apaga solo las animaciones en bucle (loop infinito).
  * Las animaciones de una sola pasada (fade, row, slide, pop) siguen activas
@@ -317,6 +329,7 @@ textarea::placeholder {
   .animate-blink,
   .animate-grid,
   .animate-pulse-neon,
+  .animate-pulse-cyan,
   .animate-pix,
   .animate-wipe,
   .animate-float,

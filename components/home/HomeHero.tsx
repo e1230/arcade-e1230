@@ -32,7 +32,7 @@ export function HomeHero() {
             variant="outline"
             accent="cyan"
             size="lg"
-            className="motion-safe:animate-pulse-neon"
+            className="motion-safe:animate-pulse-cyan"
           >
             ▶ EXPLORAR JUEGOS
           </NeonButton>
