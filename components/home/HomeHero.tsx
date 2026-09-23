@@ -40,13 +40,13 @@ export function HomeHero() {
             ✦ CREAR CUENTA
           </NeonButton>
         </div>
-        <div
-          aria-hidden="true"
-          className="absolute -bottom-5 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 font-pixel text-[9px] tracking-[0.2em] text-subtle"
-        >
-          <span>DESLIZA</span>
-          <span className="motion-safe:animate-bounce-arrow text-cyan">▼</span>
-        </div>
+      </div>
+      <div
+        aria-hidden="true"
+        className="absolute bottom-4 left-1/2 z-3 flex -translate-x-1/2 flex-col items-center gap-2 font-pixel text-[9px] tracking-[0.2em] text-subtle"
+      >
+        <span>DESLIZA</span>
+        <span className="motion-safe:animate-bounce-arrow text-cyan">▼</span>
       </div>
     </section>
   );

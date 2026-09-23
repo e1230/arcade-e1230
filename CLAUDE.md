@@ -65,3 +65,5 @@ No implementes funcionalidades grandes sin un spec aprobado en `specs/`. El usua
 - El codigo que se implemente en el proyecto debe estar en inglés
 - Los comentarios del codigo deben ser español latinoamericano
 - Las respuestas por la consola claude son en español
+## Detalles adicionales
+- Cuando se utilice el mcp playwright, este debe guardar pantallazos en la carpeta .playwright-screenshots

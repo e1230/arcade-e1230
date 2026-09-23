@@ -10,11 +10,15 @@ interface RevealProps {
 // Envuelve una sección del home y la revela con un fundido la primera vez que entra en pantalla
 export function Reveal({ children, className = "" }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(typeof IntersectionObserver === "undefined");
+  // Arranca siempre en false para que el HTML del servidor coincida con el primer render del cliente
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setVisible(true);
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
