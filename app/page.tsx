@@ -1,6 +1,7 @@
 import { FeatureGrid } from "@/components/home/FeatureGrid";
 import { GamesRail } from "@/components/home/GamesRail";
 import { HomeHero } from "@/components/home/HomeHero";
+import { StatsBand } from "@/components/home/StatsBand";
 
 export default function Home() {
   return (
@@ -8,6 +9,7 @@ export default function Home() {
       <HomeHero />
       <FeatureGrid />
       <GamesRail />
+      <StatsBand />
     </div>
   );
 }
