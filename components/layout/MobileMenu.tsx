@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { NeonButton } from "@/components/ui/NeonButton";
 import { getPlayerName, useSession } from "@/lib/session";
@@ -42,9 +43,10 @@ export function MobileMenu() {
         <span className="h-0.5 w-5 bg-cyan" />
       </button>
 
-      {open && (
-        <>
-          <div onClick={close} className="fixed inset-0 z-50 bg-black/60" />
+      {open &&
+        createPortal(
+          <>
+            <div onClick={close} className="fixed inset-0 z-50 bg-black/60" />
           <div className="motion-safe:animate-slide fixed inset-y-0 right-0 z-[51] flex w-[78%] max-w-[320px] flex-col gap-6 border-l-2 border-pink bg-surface p-7 shadow-[-10px_0_40px_rgba(255,0,110,.3)]">
             <div className="flex items-center justify-between">
               <span className="font-pixel text-[10px] text-pink">MENÚ</span>
@@ -102,8 +104,9 @@ export function MobileMenu() {
               </NeonButton>
             )}
           </div>
-        </>
-      )}
+          </>,
+          document.body,
+        )}
     </div>
   );
 }
