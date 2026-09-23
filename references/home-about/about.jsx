@@ -29,9 +29,9 @@ function About({ navigate }) {
       {/* ABOUT */}
       <section className="about-hero">
         <div className="kicker pixel neon-yellow">▸ ACERCA DE</div>
-        <h1 className="about-title">ACERCA DE ARCADE VAULT</h1>
+        <h1 className="about-title">ACERCA DE ARCADE E1230</h1>
         <p className="about-mission">
-          ARCADE VAULT nació del amor por los videojuegos clásicos. Nuestra misión es preservar y celebrar
+          ARCADE E1230 nació del amor por los videojuegos clásicos. Nuestra misión es preservar y celebrar
           los arcades que definieron una generación, haciéndolos accesibles para todos, en cualquier lugar
           y sin costo.
         </p>
@@ -85,7 +85,7 @@ function About({ navigate }) {
                 </div>
                 <div className="field">
                   <label>CORREO ELECTRÓNICO</label>
-                  <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="jugador@vault.gg" />
+                  <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="jugador@email.gg" />
                 </div>
                 <div className="field">
                   <label>MENSAJE</label>
@@ -97,10 +97,10 @@ function About({ navigate }) {
               <div className="terminal-success">
                 <div className="term-bar">
                   <span className="dot r"></span><span className="dot y"></span><span className="dot g"></span>
-                  <span className="term-title">VAULT-OS // TERMINAL</span>
+                  <span className="term-title">E1230-OS // TERMINAL</span>
                 </div>
                 <div className="term-body">
-                  <div className="line"><span className="prompt">vault@arcade:~$</span> ./send_message --to=team</div>
+                  <div className="line"><span className="prompt">e1230@arcade:~$</span> ./send_message --to=team</div>
                   <div className="line dim">[OK] Conectando con servidor…</div>
                   <div className="line dim">[OK] Validando contenido…</div>
                   <div className="line dim">[OK] Transmitiendo paquete…</div>
