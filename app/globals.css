@@ -31,6 +31,7 @@
   --neon-cyan: #00f5ff;
   --neon-pink: #ff006e;
   --neon-yellow: #f5ff00;
+  --neon-green: #00ff88;
 
   /* Colores del podio (oro, plata y bronce) */
   --gold: #ffd23f;
@@ -56,6 +57,7 @@
   --color-cyan: var(--neon-cyan);
   --color-pink: var(--neon-pink);
   --color-yellow: var(--neon-yellow);
+  --color-green: var(--neon-green);
   --color-gold: var(--gold);
   --color-silver: var(--silver);
   --color-bronze: var(--bronze);
@@ -97,6 +99,9 @@
   --animate-pix: e-pix 0.9s infinite;
   --animate-wipe: e-wipe 1.1s linear infinite;
   --animate-pop: e-pop 0.25s ease-out;
+  --animate-float: e-float 6s ease-in-out infinite;
+  --animate-bounce-arrow: e-bounce 1.6s ease-in-out infinite;
+  --animate-tick: e-tick 0.36s ease-out both;
 }
 
 /* Estilos base copiados de la referencia */
@@ -274,6 +279,33 @@ textarea::placeholder {
   }
 }
 
+@keyframes e-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(2deg);
+  }
+}
+
+@keyframes e-bounce {
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+@keyframes e-tick {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /*
  * Accesibilidad de movimiento: apaga solo las animaciones en bucle (loop infinito).
  * Las animaciones de una sola pasada (fade, row, slide, pop) siguen activas
@@ -286,7 +318,9 @@ textarea::placeholder {
   .animate-grid,
   .animate-pulse-neon,
   .animate-pix,
-  .animate-wipe {
+  .animate-wipe,
+  .animate-float,
+  .animate-bounce-arrow {
     animation: none;
   }
 }
