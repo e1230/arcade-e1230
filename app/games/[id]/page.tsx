@@ -30,8 +30,8 @@ export default async function GameDetailPage({ params }: PageProps<"/games/[id]"
 
   return (
     <div className="mx-auto max-w-[1200px] px-5 pb-30 pt-10">
-      <NeonButton href="/" variant="ghost" size="sm" className="mb-7">
-        &lt; VOLVER AL INICIO
+      <NeonButton href="/games" variant="ghost" size="sm" className="mb-7">
+        &lt; VOLVER A LA BIBLIOTECA
       </NeonButton>
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] items-start gap-9">
@@ -68,8 +68,8 @@ export default async function GameDetailPage({ params }: PageProps<"/games/[id]"
             >
               JUGAR AHORA
             </NeonButton>
-            <NeonButton href="/" variant="outline" accent="cyan" size="md">
-              VOLVER AL INICIO
+            <NeonButton href="/games" variant="outline" accent="cyan" size="md">
+              VOLVER A LA BIBLIOTECA
             </NeonButton>
           </div>
           <PlayingAs />

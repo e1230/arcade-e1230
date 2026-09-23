@@ -61,8 +61,8 @@ export function GameOverModal({
           >
             JUGAR DE NUEVO
           </NeonButton>
-          <NeonButton href="/" variant="ghost" size="sm" className="flex-1 basis-40">
-            VOLVER AL INICIO
+          <NeonButton href="/games" variant="ghost" size="sm" className="flex-1 basis-40">
+            VOLVER A LA BIBLIOTECA
           </NeonButton>
         </div>
       </div>
