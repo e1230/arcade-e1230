@@ -6,26 +6,28 @@ Este archivo le da contexto a Claude Code (claude.ai/code) al trabajar en este r
 
 ## Proyecto
 
-Arcade E1230 es una plataforma online para jugar y competir por la mayor cantidad de puntos. El MVP visual (spec `specs/01-mvp-visual.md`) ya está implementado: las cinco pantallas de `references/Arcade E1230.dc.html` están portadas a App Router con datos e interacciones simuladas y sin ningún juego real. El README y los specs están escritos en español, así que las nuevas specs también deben escribirse en español.
+Arcade E1230 es una plataforma online para jugar y competir por la mayor cantidad de puntos. El MVP visual (spec `specs/01-mvp-visual.md`) ya está implementado: las cinco pantallas de `references/Arcade E1230.dc.html` están portadas a App Router con datos e interacciones simuladas y sin ningún juego real. El home de presentación (spec `specs/02-home-landing.md`) también está implementado: `/` pasó a ser una landing y la Biblioteca se movió a `/games`. El README y los specs están escritos en español, así que las nuevas specs también deben escribirse en español.
 
 ### Rutas
 
-- `/` — Biblioteca: hero animado, buscador, chips de categoría y grilla de 8 tarjetas con tilt 3D.
+- `/` — Home de presentación: hero con siluetas flotantes, secciones ¿Por qué?, juegos disponibles, estadísticas, actividad en vivo, precios con FAQ y el cierre «¿Listo para jugar?».
+- `/games` — Biblioteca: hero animado, buscador, chips de categoría y grilla de 8 tarjetas con tilt 3D.
 - `/games/[id]` — Detalle del juego, con el ranking de mejores puntuaciones.
 - `/games/[id]/play` — Reproductor: HUD, gabinete CRT, carga simulada, pausa y partida simulada con modal de fin de juego.
-- `/login` — Autenticación simulada (usuario/contraseña, Google, GitHub, invitado).
+- `/login` — Autenticación simulada (usuario/contraseña, Google, GitHub, invitado). Acepta `?mode=register` para abrir directo en CREAR CUENTA.
 - `/hall-of-fame` — Salón de la Fama con pestañas por juego y marca personal.
 - `app/not-found.tsx` — 404 temática para cualquier URL desconocida (incluidos ids de juego inexistentes).
 
 ### Estructura
 
-- `components/layout/` — `BackgroundEffects`, `Navbar`, `MobileMenu`.
+- `components/layout/` — `BackgroundEffects`, `Navbar`, `MobileMenu`, `nav-links.ts`.
 - `components/ui/` — `Logo`, `NeonButton`, `rank-styles.ts`.
+- `components/home/` — `HomeHero`, `FloatingSilhouettes`, `SectionHeading`, `Reveal`, `FeatureGrid`, `FeatureIcon`, `GamesRail`, `MiniGameCard`, `StatsBand`, `LiveActivity`, `PricingSection`, `FinalCta`.
 - `components/library/` — `LibraryHero`, `LibraryView`, `SearchBar`, `CategoryFilter`, `GameCard`.
 - `components/game/` — `GameCover`, `PlayingAs`, `DetailLeaderboard`, `PlayerView`, `PlayerHud`, `CrtScreen`, `PixelLoader`, `GameOverModal`.
 - `components/auth/` — `AuthCard`, `AuthField`.
 - `components/hall-of-fame/` — `HallOfFameView`, `GameTabs`, `HallOfFameTable`.
-- `lib/` — `format.ts`, `games.ts`, `scores.ts`, `storage.ts`, `session.ts`, `local-scores.ts`.
+- `lib/` — `format.ts`, `games.ts`, `scores.ts`, `storage.ts`, `session.ts`, `local-scores.ts`, `activity.ts`.
 
 ### Persistencia simulada (localStorage)
 

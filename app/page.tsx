@@ -1,4 +1,5 @@
 import { FeatureGrid } from "@/components/home/FeatureGrid";
+import { FinalCta } from "@/components/home/FinalCta";
 import { GamesRail } from "@/components/home/GamesRail";
 import { HomeHero } from "@/components/home/HomeHero";
 import { LiveActivity } from "@/components/home/LiveActivity";
@@ -14,6 +15,7 @@ export default function Home() {
       <StatsBand />
       <LiveActivity />
       <PricingSection />
+      <FinalCta />
     </div>
   );
 }
