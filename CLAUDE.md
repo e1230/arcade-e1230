@@ -44,7 +44,7 @@ Autenticación real, backend y ranking global en servidor quedan fuera de este s
 Solo las usa la Server Action de contacto (`app/about/actions.ts`). Se definen en `.env` (no versionado), documentadas sin valores en `.env.example`.
 
 | Variable             | Obligatoria | Uso                                                                                          |
-| --------------------- | ----------- | --------------------------------------------------------------------------------------------- |
+| -------------------- | ----------- | -------------------------------------------------------------------------------------------- |
 | `RESEND_API_KEY`     | Sí          | Clave de API de Resend. Solo se lee dentro de la Server Action.                              |
 | `CONTACT_TO_EMAIL`   | Sí          | Correo que recibe los mensajes. En el entorno del usuario: su correo de la cuenta de Resend. |
 | `CONTACT_FROM_EMAIL` | No          | Remitente. Si falta, se usa `Arcade E1230 <onboarding@resend.dev>`.                          |
@@ -57,8 +57,13 @@ Con el remitente por defecto (`onboarding@resend.dev`), Resend solo permite envi
 - `npm run build`: build de producción (también hace type-check)
 - `npm run lint`: ESLint (config flat en `eslint.config.mjs`, extiende `eslint-config-next` core-web-vitals y typescript)
 - `npx tsc --noEmit`: solo type-check
+- `npm run format`: formatea todo el repo con Prettier (`npm run format:check` solo verifica)
 
 Todavía no hay un framework de tests configurado.
+
+### Formato automático (hook de Claude Code)
+
+`.claude/settings.json` registra un hook `PostToolUse` (Write/Edit) que ejecuta `.claude/hooks/format-and-lint.sh` sobre cada archivo creado o modificado: Prettier (`.prettierrc.json`, con `prettier-plugin-tailwindcss` para ordenar clases) sobre cualquier tipo que soporte, y `eslint --fix` en archivos JS/TS. Si ESLint deja errores sin corregir, el hook sale con código 2 y Claude recibe el mensaje para arreglarlos. Lo que está en `.prettierignore` (p. ej. `references/`) no se toca.
 
 ## Notas del stack
 
@@ -77,8 +82,11 @@ Las funcionalidades siguen el método spec-driven de [Klerith/fernando-skills](h
 No implementes funcionalidades grandes sin un spec aprobado en `specs/`. El usuario también instaló el skill `frontend-design` de Anthropic para trabajo de UI.
 
 ## Idiomas
+
 - El codigo que se implemente en el proyecto debe estar en inglés
 - Los comentarios del codigo deben ser español latinoamericano
 - Las respuestas por la consola claude son en español
+
 ## Detalles adicionales
+
 - Cuando se utilice el mcp playwright, este debe guardar pantallazos en la carpeta .playwright-screenshots

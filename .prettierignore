@@ -1,0 +1,16 @@
+# Build y dependencias
+.next/
+out/
+build/
+node_modules/
+*.tsbuildinfo
+next-env.d.ts
+
+# Archivos generados o de terceros
+package-lock.json
+skills-lock.json
+.agents/
+
+# Material de referencia y capturas
+references/
+.playwright-screenshots/
