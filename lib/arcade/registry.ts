@@ -1,7 +1,9 @@
 import type { GameDefinition } from "@/lib/arcade/engine";
+import { asteroidsDefinition } from "@/lib/arcade/asteroids";
 
-// Todavía sin motores registrados; el paso 6 agrega `asteroids`.
-const DEFINITIONS: Partial<Record<string, GameDefinition>> = {};
+const DEFINITIONS: Partial<Record<string, GameDefinition>> = {
+  asteroids: asteroidsDefinition,
+};
 
 export function getGameDefinition(gameId: string): GameDefinition | undefined {
   return DEFINITIONS[gameId];

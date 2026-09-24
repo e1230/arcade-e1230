@@ -1,16 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CrtScreen } from "@/components/game/CrtScreen";
+import { GameCanvas } from "@/components/game/GameCanvas";
 import { GameOverModal } from "@/components/game/GameOverModal";
 import { PlayerHud } from "@/components/game/PlayerHud";
+import { StartScreen } from "@/components/game/StartScreen";
 import { NeonButton } from "@/components/ui/NeonButton";
+import type { GameCallbacks } from "@/lib/arcade/engine";
+import { getGameDefinition } from "@/lib/arcade/registry";
 import { formatToday } from "@/lib/format";
 import { ACCENTS, type Game } from "@/lib/games";
 import { useLocalScores } from "@/lib/local-scores";
 import { getPlayerName, useSession } from "@/lib/session";
 
-type PlayerStatus = "loading" | "ready" | "simulating" | "over";
+type PlayerStatus = "loading" | "ready" | "simulating" | "playing" | "over";
 
 interface PlayerState {
   status: PlayerStatus;
@@ -101,14 +105,16 @@ export function PlayerView({ game }: PlayerViewProps) {
         ...s,
         score: s.score + Math.floor(Math.random() * 90 + 10) * 10,
         level: 1 + Math.floor(t / 12),
-        lives: t % TICKS_TO_LOSE_LIFE === 0 ? Math.max(0, s.lives - 1) : s.lives,
+        lives:
+          t % TICKS_TO_LOSE_LIFE === 0 ? Math.max(0, s.lives - 1) : s.lives,
       }));
       if (t >= TICKS_TO_END) endGame();
     }, TICK_MS);
   }, [endGame]);
 
   const togglePause = useCallback(() => {
-    if (stateRef.current.status === "loading" || stateRef.current.status === "over") return;
+    const status = stateRef.current.status;
+    if (status !== "simulating" && status !== "playing") return;
     setState((s) => ({ ...s, paused: !s.paused }));
   }, []);
 
@@ -120,8 +126,47 @@ export function PlayerView({ game }: PlayerViewProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [togglePause]);
 
+  const definition = useMemo(() => getGameDefinition(game.id), [game.id]);
+
+  const handleStart = useCallback(() => {
+    if (stateRef.current.status !== "ready") return;
+    setState((s) => ({ ...s, status: "playing" }));
+  }, []);
+
+  useEffect(() => {
+    if (!definition) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.code === "Space" && stateRef.current.status === "ready") {
+        e.preventDefault();
+        handleStart();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [definition, handleStart]);
+
+  const callbacks = useMemo<GameCallbacks>(
+    () => ({
+      onScore: (score) => setState((s) => ({ ...s, score })),
+      onLives: (lives) => setState((s) => ({ ...s, lives })),
+      onLevel: (level) => setState((s) => ({ ...s, level })),
+      onGameOver: (finalScore) =>
+        setState((s) => ({
+          ...s,
+          status: "over",
+          paused: false,
+          score: finalScore,
+        })),
+    }),
+    [],
+  );
+
   function handleSave() {
-    const entry = { name: getPlayerName(user), score: state.score, date: formatToday() };
+    const entry = {
+      name: getPlayerName(user),
+      score: state.score,
+      date: formatToday(),
+    };
     saveScore(game.id, entry);
     setState((s) => ({ ...s, saved: true, typedMessage: "" }));
     let i = 0;
@@ -142,39 +187,81 @@ export function PlayerView({ game }: PlayerViewProps) {
   const accentHex = ACCENTS[game.accent].hex;
 
   return (
-    <div className="mx-auto flex w-full max-w-[860px] flex-col gap-4.5 px-4 pb-20 pt-7">
+    <div className="mx-auto flex w-full max-w-[860px] flex-col gap-4.5 px-4 pt-7 pb-20">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span style={{ textShadow: `0 0 8px ${accentHex}` }} className="font-pixel text-sm text-white">
+        <span
+          style={{ textShadow: `0 0 8px ${accentHex}` }}
+          className="font-pixel text-sm text-white"
+        >
           {game.title}
         </span>
         <div className="flex gap-2.5">
-          <NeonButton variant="outline" accent="yellow" size="sm" onClick={togglePause}>
+          <NeonButton
+            variant="outline"
+            accent="yellow"
+            size="sm"
+            onClick={togglePause}
+          >
             {pauseLabel}
           </NeonButton>
-          <NeonButton href={`/games/${game.id}`} variant="outline" accent="pink" size="sm">
+          <NeonButton
+            href={`/games/${game.id}`}
+            variant="outline"
+            accent="pink"
+            size="sm"
+          >
             SALIR
           </NeonButton>
         </div>
       </div>
 
-      <PlayerHud score={state.score} lives={state.lives} level={state.level} playerName={playerName} />
+      <PlayerHud
+        score={state.score}
+        lives={state.lives}
+        level={state.level}
+        playerName={playerName}
+      />
 
       <CrtScreen loading={state.status === "loading"} paused={state.paused}>
-        {state.status === "ready" && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4.5 bg-repeat p-6 text-center [background-image:repeating-linear-gradient(135deg,rgba(0,245,255,.05)_0_10px,transparent_10px_20px)]">
-            <span className="font-pixel text-xs text-cyan">IFRAME SANDBOX</span>
-            <code className="border border-border bg-surface px-3 py-2 text-[15px] text-foreground">
-              juegos/{game.id}.html
-            </code>
-            <p className="m-0 max-w-[44ch] text-sm leading-relaxed text-muted">
-              Coloca aquí el archivo HTML del juego. Envía la puntuación con
-              postMessage({"{ tipo: 'puntuacion', valor }"}) y el final con {"{ tipo: 'fin' }"}.
-            </p>
-            <NeonButton variant="outline" accent="yellow" size="sm" onClick={simulate}>
-              SIMULAR PARTIDA
-            </NeonButton>
-          </div>
-        )}
+        {state.status === "ready" &&
+          (definition ? (
+            <StartScreen
+              title={game.title}
+              controls={definition.controls}
+              onStart={handleStart}
+            />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4.5 [background-image:repeating-linear-gradient(135deg,rgba(0,245,255,.05)_0_10px,transparent_10px_20px)] bg-repeat p-6 text-center">
+              <span className="font-pixel text-xs text-cyan">
+                IFRAME SANDBOX
+              </span>
+              <code className="border border-border bg-surface px-3 py-2 text-[15px] text-foreground">
+                juegos/{game.id}.html
+              </code>
+              <p className="m-0 max-w-[44ch] text-sm leading-relaxed text-muted">
+                Coloca aquí el archivo HTML del juego. Envía la puntuación con
+                postMessage({"{ tipo: 'puntuacion', valor }"}) y el final con{" "}
+                {"{ tipo: 'fin' }"}.
+              </p>
+              <NeonButton
+                variant="outline"
+                accent="yellow"
+                size="sm"
+                onClick={simulate}
+              >
+                SIMULAR PARTIDA
+              </NeonButton>
+            </div>
+          ))}
+
+        {definition &&
+          (state.status === "playing" || state.status === "over") && (
+            <GameCanvas
+              definition={definition}
+              paused={state.paused}
+              callbacks={callbacks}
+            />
+          )}
       </CrtScreen>
 
       {state.status === "over" && (
