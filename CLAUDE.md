@@ -6,7 +6,7 @@ Este archivo le da contexto a Claude Code (claude.ai/code) al trabajar en este r
 
 ## Proyecto
 
-Arcade E1230 es una plataforma online para jugar y competir por la mayor cantidad de puntos. El MVP visual (spec `specs/01-mvp-visual.md`) ya está implementado: las cinco pantallas de `references/Arcade E1230.dc.html` están portadas a App Router con datos e interacciones simuladas y sin ningún juego real. El home de presentación (spec `specs/02-home-landing.md`) también está implementado: `/` pasó a ser una landing y la Biblioteca se movió a `/games`. El README y los specs están escritos en español, así que las nuevas specs también deben escribirse en español.
+Arcade E1230 es una plataforma online para jugar y competir por la mayor cantidad de puntos. El MVP visual (spec `specs/01-mvp-visual.md`) ya está implementado: las cinco pantallas de `references/Arcade E1230.dc.html` están portadas a App Router con datos e interacciones simuladas y sin ningún juego real. El home de presentación (spec `specs/02-home-landing.md`) también está implementado: `/` pasó a ser una landing y la Biblioteca se movió a `/games`. La página «Acerca de» (spec `specs/03-about-contact.md`) también está implementada: agrega `/about` con un formulario de contacto que envía un correo real al equipo con Resend, la primera funcionalidad del proyecto que ejecuta código propio en el servidor. El README y los specs están escritos en español, así que las nuevas specs también deben escribirse en español.
 
 ### Rutas
 
@@ -16,6 +16,7 @@ Arcade E1230 es una plataforma online para jugar y competir por la mayor cantida
 - `/games/[id]/play` — Reproductor: HUD, gabinete CRT, carga simulada, pausa y partida simulada con modal de fin de juego.
 - `/login` — Autenticación simulada (usuario/contraseña, Google, GitHub, invitado). Acepta `?mode=register` para abrir directo en CREAR CUENTA.
 - `/hall-of-fame` — Salón de la Fama con pestañas por juego y marca personal.
+- `/about` — Página «Acerca de»: hero con misión y tarjetas destacadas, divisor de píxeles y formulario de contacto que envía un correo real al equipo con Resend.
 - `app/not-found.tsx` — 404 temática para cualquier URL desconocida (incluidos ids de juego inexistentes).
 
 ### Estructura
@@ -27,14 +28,28 @@ Arcade E1230 es una plataforma online para jugar y competir por la mayor cantida
 - `components/game/` — `GameCover`, `PlayingAs`, `DetailLeaderboard`, `PlayerView`, `PlayerHud`, `CrtScreen`, `PixelLoader`, `GameOverModal`.
 - `components/auth/` — `AuthCard`, `AuthField`.
 - `components/hall-of-fame/` — `HallOfFameView`, `GameTabs`, `HallOfFameTable`.
-- `lib/` — `format.ts`, `games.ts`, `scores.ts`, `storage.ts`, `session.ts`, `local-scores.ts`, `activity.ts`.
+- `components/about/` — `AboutHero`, `HighlightIcon`, `PixelDivider`, `ContactSection`, `ContactForm`, `ContactField`, `ContactTerminal`.
+- `lib/` — `format.ts`, `games.ts`, `scores.ts`, `storage.ts`, `session.ts`, `local-scores.ts`, `activity.ts`, `contact.ts`, `contact-email.ts`.
+- `app/about/actions.ts` — Server Action `sendContactMessage` que valida el mensaje de contacto y lo envía por Resend.
 
 ### Persistencia simulada (localStorage)
 
 - `e1230_user` — sesión simulada (`SessionUser`): login, registro, Google, GitHub e invitado.
 - `e1230_scores` — puntuaciones locales por juego, mezcladas con los rankings mock deterministas de `lib/scores.ts`.
 
-Autenticación real, backend y ranking global en servidor quedan fuera de este spec; ver la sección «Fuera de alcance» de `specs/01-mvp-visual.md`.
+Autenticación real, backend y ranking global en servidor quedan fuera de este spec; ver la sección «Fuera de alcance» de `specs/01-mvp-visual.md`. El único código de servidor del proyecto es el envío del formulario de contacto (`app/about/actions.ts`); todo lo demás sigue simulado en `localStorage`.
+
+### Variables de entorno
+
+Solo las usa la Server Action de contacto (`app/about/actions.ts`). Se definen en `.env` (no versionado), documentadas sin valores en `.env.example`.
+
+| Variable             | Obligatoria | Uso                                                                                          |
+| --------------------- | ----------- | --------------------------------------------------------------------------------------------- |
+| `RESEND_API_KEY`     | Sí          | Clave de API de Resend. Solo se lee dentro de la Server Action.                              |
+| `CONTACT_TO_EMAIL`   | Sí          | Correo que recibe los mensajes. En el entorno del usuario: su correo de la cuenta de Resend. |
+| `CONTACT_FROM_EMAIL` | No          | Remitente. Si falta, se usa `Arcade E1230 <onboarding@resend.dev>`.                          |
+
+Con el remitente por defecto (`onboarding@resend.dev`), Resend solo permite enviar al correo de la cuenta de Resend: mientras no haya un dominio propio verificado, `CONTACT_TO_EMAIL` debe ser ese mismo correo.
 
 ## Comandos
 

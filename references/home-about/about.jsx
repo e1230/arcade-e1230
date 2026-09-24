@@ -1,7 +1,8 @@
 // ===== about.jsx — About + Contact =====
+/* global React */
 const { useEffect: useEffectAb, useState: useStateAb } = React;
 
-function About({ navigate }) {
+function About() {
   useEffectAb(() => {
     const els = document.querySelectorAll(".reveal");
     const io = new IntersectionObserver((entries) => {
@@ -78,7 +79,7 @@ function About({ navigate }) {
 
           <form className={"contact-form" + (shake ? " shake" : "")} onSubmit={onSubmit}>
             {!sent ? (
-              <React.Fragment>
+              <>
                 <div className="field">
                   <label>NOMBRE</label>
                   <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="px_kai" />
@@ -92,7 +93,7 @@ function About({ navigate }) {
                   <textarea rows="5" value={form.msg} onChange={(e) => setForm({ ...form, msg: e.target.value })} placeholder="Cuéntanos qué tienes en mente…"></textarea>
                 </div>
                 <button className="btn xl press" type="submit" style={{ width: "100%" }}>▶  ENVIAR MENSAJE</button>
-              </React.Fragment>
+              </>
             ) : (
               <div className="terminal-success">
                 <div className="term-bar">
