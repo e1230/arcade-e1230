@@ -28,7 +28,7 @@ export function AboutHero() {
         los arcades que definieron una generación, haciéndolos accesibles para todos, en cualquier lugar
         y sin costo.
       </p>
-      <div className="mt-13 grid grid-cols-1 gap-4.5 sm:grid-cols-3">
+      <div className="mt-13 grid grid-cols-1 gap-4.5 min-[821px]:grid-cols-3">
         {HIGHLIGHTS.map((highlight) => (
           <div
             key={highlight.text}
