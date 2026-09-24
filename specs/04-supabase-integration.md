@@ -1,6 +1,6 @@
 # SPEC 04 — Integración base con Supabase
 
-> **Estado:** Aprobado
+> **Estado:** Impelementado
 > **Depende de:** SPEC 03
 > **Fecha:** 2026-09-24
 > **Objetivo:** Conectar la app de Next.js al proyecto de Supabase con clientes de navegador y servidor, un `proxy.ts` que refresca la sesión y una sonda `/api/health`, sin cambiar ninguna funcionalidad visible.
@@ -82,6 +82,8 @@ Este spec no crea tablas ni claves nuevas de `localStorage`. Las estructuras nue
 
 Las dos llevan el prefijo `NEXT_PUBLIC_` a propósito: Next las incluye en el bundle del cliente, que es donde las necesita `createBrowserClient`. Se leen siempre con el nombre literal (`process.env.NEXT_PUBLIC_SUPABASE_URL`), porque Next solo reemplaza accesos literales.
 
+Next reemplaza esos accesos por su valor durante `next build`, tanto en el bundle del cliente como en el código de servidor (guía `02-guides/environment-variables.md`). En `npm run dev` se leen de `.env` en cada arranque. Con un build de producción, en cambio, quedan fijas con el valor que tenían al compilar: cambiarlas exige volver a correr `npm run build`.
+
 `SUPABASE_PASSWORD` (contraseña de Postgres) sale de `.env.example`. Ningún archivo de `app/`, `lib/`, `components/` ni `proxy.ts` la lee.
 
 ### Lectura de variables — `lib/supabase/env.ts`
@@ -145,7 +147,7 @@ type HealthResponse =
 | `unreachable` | La petición respondió no-2xx, lanzó una excepción o no respondió en 5 segundos (`AbortSignal.timeout`). |
 
 - La respuesta no incluye la URL, la clave ni detalles del error. En los casos de error se hace `console.error` con el código y, si existe, el mensaje o el status HTTP.
-- La respuesta se calcula en cada petición: no se prerenderiza en el build ni se cachea.
+- La respuesta se calcula en cada petición: no se prerenderiza en el build ni se cachea. La URL y la clave que usa sí son las del build (ver «Variables de entorno»).
 
 ## Plan de implementación
 
@@ -195,7 +197,7 @@ Cada paso deja la app compilando (`npx tsc --noEmit`) y corriendo con `npm run d
 - [ ] Con `NEXT_PUBLIC_SUPABASE_URL=https://noexiste.invalid` en `.env`, `/api/health` responde `503` y `{"status":"error","supabase":"unreachable"}` en menos de 10 segundos, y la terminal muestra el `console.error`.
 - [ ] Sin las dos variables de Supabase en `.env`, `/api/health` responde `503` y `{"status":"error","supabase":"config"}`.
 - [ ] Ninguna respuesta de `/api/health` contiene la URL del proyecto ni la clave publicable.
-- [ ] Después de `npm run build` y `npm run start`, cambiar `.env` a una URL inválida y reiniciar `npm run start` hace que `/api/health` pase de `ok` a `unreachable` (la respuesta no quedó congelada en el build).
+- [ ] La salida de `npm run build` marca `/api/health` como `ƒ` (dinámica), no como `○` (estática).
 
 **Modo degradado**
 
@@ -219,6 +221,9 @@ Cada paso deja la app compilando (`npx tsc --noEmit`) y corriendo con `npm run d
 - **No:** usar el cliente de Supabase en la sonda. Sin sesión ni tablas, sus métodos no hacen una petición real que confirme la conexión.
 - **Sí:** timeout de 5 segundos en la sonda. Una sonda que cuelga no sirve para diagnosticar.
 - **Sí:** solo `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Son las dos que necesitan los clientes y el proxy.
+- **Sí:** aceptar que las `NEXT_PUBLIC_*` quedan fijas en cada build de producción, también en el servidor. Apuntar a otro proyecto de Supabase exige volver a compilar. (Decidido durante la verificación: el criterio original esperaba que la sonda leyera `.env` en tiempo de ejecución después del build, y Next no lo permite con este prefijo.)
+- **No:** agregar `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` sin prefijo para que el servidor las lea en tiempo de ejecución. Duplica las variables y permite que el navegador y el servidor apunten a proyectos distintos.
+- **No:** leer las variables con acceso dinámico (`process.env[name]`) para evitar que Next las incruste. Es un truco frágil que contradice la lectura literal de `lib/supabase/env.ts`.
 - **Sí:** clave publicable (`sb_publishable_…`) y no la clave `anon` antigua. Es el formato actual de Supabase y se puede rotar sin cortar sesiones.
 - **No:** `SUPABASE_SECRET_KEY`. Nada la usaría hoy, y una clave con privilegios de administrador sin uso es solo superficie de riesgo.
 - **Sí:** quitar `SUPABASE_PASSWORD` de `.env.example`. La app de Next no se conecta directo a Postgres; documentarla sugiere que hace falta.
@@ -230,15 +235,16 @@ Cada paso deja la app compilando (`npx tsc --noEmit`) y corriendo con `npm run d
 
 ## Riesgos
 
-| Riesgo                                                                                                   | Mitigación                                                                                                                 |
-| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| El proxy corre en cada petición y agrega latencia a todas las páginas.                                   | Sin cookie de sesión no hay petición de red. El `matcher` excluye los assets estáticos.                                    |
-| Un error en el proxy rompe todas las rutas de la app.                                                    | Modo degradado sin variables y criterios de «Sin regresiones» sobre todas las rutas.                                       |
-| La API de `@supabase/ssr` o de `supabase.auth` cambió respecto de la guía conocida (p. ej. `getClaims`). | Los pasos 4 y 5 revisan los tipos en `node_modules` antes de escribir, y `npx tsc --noEmit` detecta diferencias.           |
-| `/api/health` se prerenderiza en el build y responde siempre el estado de ese momento.                   | El paso 6 revisa la guía de Route Handlers de Next 16, y hay un criterio que cambia `.env` después del build.              |
-| La clave publicable queda visible en el bundle del cliente.                                              | Es pública por diseño. Sin tablas no hay datos expuestos; los specs que creen tablas deben activar RLS.                    |
-| Se cachea en `fetch` la respuesta de la sonda y oculta una caída real.                                   | La petición a Supabase se hace con `cache: "no-store"`.                                                                    |
-| El proyecto gratuito de Supabase se pausa por inactividad y la sonda responde `unreachable`.             | Es el comportamiento esperado de la sonda: ese es justo el caso que debe detectar. Se reactiva desde el panel de Supabase. |
+| Riesgo                                                                                                     | Mitigación                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| El proxy corre en cada petición y agrega latencia a todas las páginas.                                     | Sin cookie de sesión no hay petición de red. El `matcher` excluye los assets estáticos.                                    |
+| Un error en el proxy rompe todas las rutas de la app.                                                      | Modo degradado sin variables y criterios de «Sin regresiones» sobre todas las rutas.                                       |
+| La API de `@supabase/ssr` o de `supabase.auth` cambió respecto de la guía conocida (p. ej. `getClaims`).   | Los pasos 4 y 5 revisan los tipos en `node_modules` antes de escribir, y `npx tsc --noEmit` detecta diferencias.           |
+| `/api/health` se prerenderiza en el build y responde siempre el estado de ese momento.                     | El paso 6 revisa la guía de Route Handlers de Next 16, y hay un criterio que exige que el build la marque como `ƒ`.        |
+| Se cambian las variables de Supabase en un despliegue sin recompilar, y la app sigue usando las del build. | Documentado en el modelo de datos y en `CLAUDE.md`: cambiar `NEXT_PUBLIC_*` exige un nuevo `npm run build`.                |
+| La clave publicable queda visible en el bundle del cliente.                                                | Es pública por diseño. Sin tablas no hay datos expuestos; los specs que creen tablas deben activar RLS.                    |
+| Se cachea en `fetch` la respuesta de la sonda y oculta una caída real.                                     | La petición a Supabase se hace con `cache: "no-store"`.                                                                    |
+| El proyecto gratuito de Supabase se pausa por inactividad y la sonda responde `unreachable`.               | Es el comportamiento esperado de la sonda: ese es justo el caso que debe detectar. Se reactiva desde el panel de Supabase. |
 
 ## Lo que **no** entra en este spec
 
