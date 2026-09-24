@@ -1,6 +1,6 @@
 # SPEC 02 — Home de presentación de Arcade E1230
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01
 > **Fecha:** 2026-09-23
 > **Objetivo:** Reemplazar la Biblioteca en `/` por una landing de presentación portada de `references/home-about/home.jsx` y mover la Biblioteca a `/games`.
