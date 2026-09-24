@@ -9,7 +9,6 @@ import {
   BULLET_TTL,
   COLORS,
   HEIGHT,
-  POINTS,
   POWERUP_TTL,
   RADII,
   SHIP_DRAG,
