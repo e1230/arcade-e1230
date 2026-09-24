@@ -145,6 +145,24 @@ export function PlayerView({ game }: PlayerViewProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [definition, handleStart]);
 
+  // Pausa automática: nunca se reanuda sola, solo con P o SEGUIR.
+  useEffect(() => {
+    function pauseIfPlaying() {
+      if (stateRef.current.status === "playing" && !stateRef.current.paused) {
+        setState((s) => ({ ...s, paused: true }));
+      }
+    }
+    function onVisibilityChange() {
+      if (document.visibilityState === "hidden") pauseIfPlaying();
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("blur", pauseIfPlaying);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("blur", pauseIfPlaying);
+    };
+  }, []);
+
   const callbacks = useMemo<GameCallbacks>(
     () => ({
       onScore: (score) => setState((s) => ({ ...s, score })),
