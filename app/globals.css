@@ -103,6 +103,8 @@
   --animate-bounce-arrow: e-bounce 1.6s ease-in-out infinite;
   --animate-tick: e-tick 0.36s ease-out both;
   --animate-pulse-cyan: e-pulse-cyan 1.6s ease-in-out infinite;
+  --animate-shake: e-shake 0.4s ease-in-out 1;
+  --animate-pxblink: e-pxblink 2.4s steps(2) infinite;
 }
 
 /* Estilos base copiados de la referencia */
@@ -318,6 +320,33 @@ textarea::placeholder {
   }
 }
 
+/* Sacudida del panel de contacto al fallar la validación en cliente */
+@keyframes e-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(6px);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Parpadeo escalonado de los píxeles del divisor de "Acerca de" */
+@keyframes e-pxblink {
+  50% {
+    opacity: 0.2;
+  }
+}
+
 /*
  * Accesibilidad de movimiento: apaga solo las animaciones en bucle (loop infinito).
  * Las animaciones de una sola pasada (fade, row, slide, pop) siguen activas
@@ -333,7 +362,8 @@ textarea::placeholder {
   .animate-pix,
   .animate-wipe,
   .animate-float,
-  .animate-bounce-arrow {
+  .animate-bounce-arrow,
+  .animate-pxblink {
     animation: none;
   }
 }

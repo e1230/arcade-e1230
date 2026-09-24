@@ -1,4 +1,5 @@
 // ===== nav.jsx =====
+/* global React */
 const { useState } = React;
 
 function Nav({ route, navigate, user, onSignOut }) {
@@ -7,7 +8,7 @@ function Nav({ route, navigate, user, onSignOut }) {
   const go = (r) => { setOpen(false); navigate(r); };
 
   return (
-    <React.Fragment>
+    <>
       <nav className="av-nav">
         <div className="logo" onClick={() => go({ name: "home" })}>
           <div className="logo-mark"></div>
@@ -43,7 +44,7 @@ function Nav({ route, navigate, user, onSignOut }) {
         <div style={{ flex: 1 }}></div>
         <div className="pixel" style={{ fontSize: 9, color: "var(--ink-faint)", letterSpacing: "0.16em" }}>CRÉDITOS · 03</div>
       </aside>
-    </React.Fragment>
+    </>
   );
 }
 
