@@ -1,6 +1,7 @@
-import { GAMES } from "@/lib/games";
+import type { Game } from "@/lib/games";
 
 interface GameTabsProps {
+  games: Game[];
   value: string;
   onChange: (gameId: string) => void;
 }
@@ -10,10 +11,10 @@ const ACTIVE_CLASS =
 const INACTIVE_CLASS =
   "flex-none border border-border bg-transparent px-3.5 py-3 font-pixel text-[9px] text-muted";
 
-export function GameTabs({ value, onChange }: GameTabsProps) {
+export function GameTabs({ games, value, onChange }: GameTabsProps) {
   return (
     <div className="mb-6 flex gap-2 overflow-x-auto pb-1.5">
-      {GAMES.map((game) => (
+      {games.map((game) => (
         <button
           key={game.id}
           onClick={() => onChange(game.id)}
