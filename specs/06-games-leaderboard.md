@@ -1,6 +1,6 @@
 # SPEC 06 — Catálogo de juegos y ranking global en Supabase
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 04, SPEC 05
 > **Fecha:** 2026-09-24
 > **Objetivo:** Crear en Supabase las tablas `games` y `scores` y que el catálogo y los rankings de la app se lean y guarden ahí, en lugar de en `lib/games.ts`, los mocks de `lib/scores.ts` y `localStorage`.
