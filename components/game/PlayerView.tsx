@@ -9,12 +9,12 @@ import { StartScreen } from "@/components/game/StartScreen";
 import { NeonButton } from "@/components/ui/NeonButton";
 import type { GameCallbacks } from "@/lib/arcade/engine";
 import { getGameDefinition } from "@/lib/arcade/registry";
-import { formatToday } from "@/lib/format";
 import { ACCENTS, type Game } from "@/lib/games";
-import { useLocalScores } from "@/lib/local-scores";
+import { insertScore } from "@/lib/leaderboard-client";
 import { getPlayerName, useSession } from "@/lib/session";
 
 type PlayerStatus = "loading" | "ready" | "simulating" | "playing" | "over";
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 interface PlayerState {
   status: PlayerStatus;
@@ -22,7 +22,7 @@ interface PlayerState {
   score: number;
   lives: number;
   level: number;
-  saved: boolean;
+  saveStatus: SaveStatus;
   typedMessage: string;
 }
 
@@ -32,7 +32,7 @@ const INITIAL_STATE: PlayerState = {
   score: 0,
   lives: 3,
   level: 1,
-  saved: false,
+  saveStatus: "idle",
   typedMessage: "",
 };
 
@@ -50,7 +50,6 @@ interface PlayerViewProps {
 export function PlayerView({ game }: PlayerViewProps) {
   const [state, setState] = useState<PlayerState>(INITIAL_STATE);
   const { user } = useSession();
-  const { saveScore } = useLocalScores();
 
   const loadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const simInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -179,14 +178,20 @@ export function PlayerView({ game }: PlayerViewProps) {
     [],
   );
 
-  function handleSave() {
-    const entry = {
+  async function handleSave() {
+    setState((s) => ({ ...s, saveStatus: "saving" }));
+    const { ok } = await insertScore({
+      gameId: game.id,
       name: getPlayerName(user),
       score: state.score,
-      date: formatToday(),
-    };
-    saveScore(game.id, entry);
-    setState((s) => ({ ...s, saved: true, typedMessage: "" }));
+    });
+
+    if (!ok) {
+      setState((s) => ({ ...s, saveStatus: "error" }));
+      return;
+    }
+
+    setState((s) => ({ ...s, saveStatus: "saved", typedMessage: "" }));
     let i = 0;
     if (typeInterval.current) clearInterval(typeInterval.current);
     typeInterval.current = setInterval(() => {
@@ -285,7 +290,7 @@ export function PlayerView({ game }: PlayerViewProps) {
       {state.status === "over" && (
         <GameOverModal
           score={state.score}
-          saved={state.saved}
+          saveStatus={state.saveStatus}
           typedMessage={state.typedMessage}
           isGuest={isGuest}
           onSave={handleSave}

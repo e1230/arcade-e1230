@@ -1,11 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import type { Database } from "./database.types";
 import { readSupabaseEnv } from "./env";
 
 // Cliente de Supabase para Server Components, Server Actions y Route Handlers.
 // Se crea uno nuevo por petición: nunca se comparte entre peticiones.
-export async function createClient(): Promise<SupabaseClient> {
+export async function createClient(): Promise<SupabaseClient<Database>> {
   const env = readSupabaseEnv();
   if (!env) {
     throw new Error(

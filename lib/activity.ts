@@ -2,7 +2,7 @@ export type ActivityColor = "cyan" | "pink" | "yellow" | "green";
 
 export interface RecentScore {
   player: string;
-  gameId: string; // id de GAMES; el título se obtiene con getGame(gameId)
+  gameTitle: string;
   score: number;
   timeAgo: string;
   color: ActivityColor; // color del nombre del jugador
@@ -19,13 +19,55 @@ export interface TopPlayer {
 // Caída → tetris, Glotón → pacman, Invasores → invaders, Rocas → asteroids,
 // Bloque Buster → arkanoid, Serpentina → snake, Ranaria → frogger.
 export const RECENT_SCORES: RecentScore[] = [
-  { player: "NEONFOX", gameId: "tetris", score: 184220, timeAgo: "hace 2 min", color: "pink" },
-  { player: "PX_KAI", gameId: "pacman", score: 96400, timeAgo: "hace 5 min", color: "yellow" },
-  { player: "Z3R0COOL", gameId: "invaders", score: 54190, timeAgo: "hace 8 min", color: "green" },
-  { player: "VAULT_07", gameId: "asteroids", score: 41200, timeAgo: "hace 12 min", color: "cyan" },
-  { player: "GLITCHA", gameId: "arkanoid", score: 28450, timeAgo: "hace 18 min", color: "cyan" },
-  { player: "ARKADYA", gameId: "snake", score: 7820, timeAgo: "hace 24 min", color: "green" },
-  { player: "CYBER_LU", gameId: "frogger", score: 18900, timeAgo: "hace 31 min", color: "yellow" },
+  {
+    player: "NEONFOX",
+    gameTitle: "TETRIS",
+    score: 184220,
+    timeAgo: "hace 2 min",
+    color: "pink",
+  },
+  {
+    player: "PX_KAI",
+    gameTitle: "PAC-MAN",
+    score: 96400,
+    timeAgo: "hace 5 min",
+    color: "yellow",
+  },
+  {
+    player: "Z3R0COOL",
+    gameTitle: "SPACE INVADERS",
+    score: 54190,
+    timeAgo: "hace 8 min",
+    color: "green",
+  },
+  {
+    player: "VAULT_07",
+    gameTitle: "ASTEROIDS",
+    score: 41200,
+    timeAgo: "hace 12 min",
+    color: "cyan",
+  },
+  {
+    player: "GLITCHA",
+    gameTitle: "ARKANOID",
+    score: 28450,
+    timeAgo: "hace 18 min",
+    color: "cyan",
+  },
+  {
+    player: "ARKADYA",
+    gameTitle: "SNAKE",
+    score: 7820,
+    timeAgo: "hace 24 min",
+    color: "green",
+  },
+  {
+    player: "CYBER_LU",
+    gameTitle: "FROGGER",
+    score: 18900,
+    timeAgo: "hace 31 min",
+    color: "yellow",
+  },
 ];
 
 export const TOP_PLAYERS_TODAY: TopPlayer[] = [
