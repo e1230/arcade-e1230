@@ -1,6 +1,6 @@
 # SPEC 05 — Asteroids jugable en el Reproductor
 
-> **Estado:** Aprobado
+> **Estado:** Impelementado
 > **Depende de:** SPEC 01
 > **Fecha:** 2026-09-24
 > **Objetivo:** Portar a TypeScript el Asteroids de `references/started-games/02-asteroids/` y hacerlo jugable en `/games/asteroids/play`, conectado al HUD, la pausa y el modal de fin de juego del Reproductor.
