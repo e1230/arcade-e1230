@@ -1,5 +1,6 @@
-import { pad2 } from "./format";
+import { formatScoreDate, pad2 } from "./format";
 import { GAMES } from "./games";
+import type { Database } from "./supabase/database.types";
 
 export interface ScoreEntry {
   name: string;
@@ -9,9 +10,26 @@ export interface ScoreEntry {
 
 export type LocalScores = Record<string, ScoreEntry[]>;
 
-export interface LeaderboardRow extends ScoreEntry {
-  rank: number;
-  isMine: boolean;
+export interface RankedScore {
+  rank: number; // 1..10
+  name: string;
+  score: number;
+  date: string; // "dd/mm/aaaa", ya formateada con formatScoreDate
+}
+
+export interface LeaderboardRow extends RankedScore {
+  isMine: boolean; // se calcula en el cliente con el nombre de la sesión
+}
+
+export function toRankedScore(
+  row: Database["public"]["Views"]["leaderboard"]["Row"],
+): RankedScore {
+  return {
+    rank: row.rank ?? 0,
+    name: row.name ?? "",
+    score: row.score ?? 0,
+    date: formatScoreDate(row.created_at ?? new Date().toISOString()),
+  };
 }
 
 export const MOCK_PLAYER_NAMES: string[] = [
@@ -60,6 +78,9 @@ export function buildLeaderboard(
 
 export function getBestScore(gameId: string, local: LocalScores): number {
   const gameIndex = getGameIndex(gameId);
-  const scores = [getMockScores(gameIndex)[0].score, ...(local[gameId] ?? []).map((e) => e.score)];
+  const scores = [
+    getMockScores(gameIndex)[0].score,
+    ...(local[gameId] ?? []).map((e) => e.score),
+  ];
   return Math.max(...scores);
 }
