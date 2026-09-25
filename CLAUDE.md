@@ -6,14 +6,14 @@ Este archivo le da contexto a Claude Code (claude.ai/code) al trabajar en este r
 
 ## Proyecto
 
-Arcade E1230 es una plataforma online para jugar y competir por la mayor cantidad de puntos. El MVP visual (spec `specs/01-mvp-visual.md`) ya está implementado: las cinco pantallas de `references/Arcade E1230.dc.html` están portadas a App Router con datos e interacciones simuladas y sin ningún juego real. El home de presentación (spec `specs/02-home-landing.md`) también está implementado: `/` pasó a ser una landing y la Biblioteca se movió a `/games`. La página «Acerca de» (spec `specs/03-about-contact.md`) también está implementada: agrega `/about` con un formulario de contacto que envía un correo real al equipo con Resend, la primera funcionalidad del proyecto que ejecuta código propio en el servidor. La integración base con Supabase (spec `specs/04-supabase-integration.md`) también está implementada: clientes de navegador y servidor, un `proxy.ts` que refresca la sesión y la sonda `/api/health`, sin cambios visibles en la app. El README y los specs están escritos en español, así que las nuevas specs también deben escribirse en español.
+Arcade E1230 es una plataforma online para jugar y competir por la mayor cantidad de puntos. El MVP visual (spec `specs/01-mvp-visual.md`) ya está implementado: las cinco pantallas de `references/Arcade E1230.dc.html` están portadas a App Router con datos e interacciones simuladas. El home de presentación (spec `specs/02-home-landing.md`) también está implementado: `/` pasó a ser una landing y la Biblioteca se movió a `/games`. La página «Acerca de» (spec `specs/03-about-contact.md`) también está implementada: agrega `/about` con un formulario de contacto que envía un correo real al equipo con Resend, la primera funcionalidad del proyecto que ejecuta código propio en el servidor. La integración base con Supabase (spec `specs/04-supabase-integration.md`) también está implementada: clientes de navegador y servidor, un `proxy.ts` que refresca la sesión y la sonda `/api/health`, sin cambios visibles en la app. Asteroids jugable (spec `specs/05-asteroids-game.md`) también está implementado: es el primer juego real de la plataforma, con un motor propio en TypeScript montado en el Reproductor (`/games/asteroids/play`); los demás juegos del catálogo siguen con el Reproductor simulado. El README y los specs están escritos en español, así que las nuevas specs también deben escribirse en español.
 
 ### Rutas
 
 - `/` — Home de presentación: hero con siluetas flotantes, secciones ¿Por qué?, juegos disponibles, estadísticas, actividad en vivo, precios con FAQ y el cierre «¿Listo para jugar?».
 - `/games` — Biblioteca: hero animado, buscador, chips de categoría y grilla de 8 tarjetas con tilt 3D.
 - `/games/[id]` — Detalle del juego, con el ranking de mejores puntuaciones.
-- `/games/[id]/play` — Reproductor: HUD, gabinete CRT, carga simulada, pausa y partida simulada con modal de fin de juego.
+- `/games/[id]/play` — Reproductor: HUD, gabinete CRT, carga simulada y pausa. ASTEROIDS se juega con un motor real (`lib/arcade/asteroids/`); los demás juegos siguen con partida simulada. Ambos flujos terminan en el mismo modal de fin de juego.
 - `/login` — Autenticación simulada (usuario/contraseña, Google, GitHub, invitado). Acepta `?mode=register` para abrir directo en CREAR CUENTA.
 - `/hall-of-fame` — Salón de la Fama con pestañas por juego y marca personal.
 - `/about` — Página «Acerca de»: hero con misión y tarjetas destacadas, divisor de píxeles y formulario de contacto que envía un correo real al equipo con Resend.
@@ -26,11 +26,12 @@ Arcade E1230 es una plataforma online para jugar y competir por la mayor cantida
 - `components/ui/` — `Logo`, `NeonButton`, `rank-styles.ts`.
 - `components/home/` — `HomeHero`, `FloatingSilhouettes`, `SectionHeading`, `Reveal`, `FeatureGrid`, `FeatureIcon`, `GamesRail`, `MiniGameCard`, `StatsBand`, `LiveActivity`, `PricingSection`, `FinalCta`.
 - `components/library/` — `LibraryHero`, `LibraryView`, `SearchBar`, `CategoryFilter`, `GameCard`.
-- `components/game/` — `GameCover`, `PlayingAs`, `DetailLeaderboard`, `PlayerView`, `PlayerHud`, `CrtScreen`, `PixelLoader`, `GameOverModal`.
+- `components/game/` — `GameCover`, `PlayingAs`, `DetailLeaderboard`, `PlayerView`, `PlayerHud`, `CrtScreen`, `PixelLoader`, `GameOverModal`, `GameCanvas` (monta un `GameEngine` en un `<canvas>`), `StartScreen` (pantalla de inicio con controles o aviso sin teclado).
 - `components/auth/` — `AuthCard`, `AuthField`.
 - `components/hall-of-fame/` — `HallOfFameView`, `GameTabs`, `HallOfFameTable`.
 - `components/about/` — `AboutHero`, `HighlightIcon`, `PixelDivider`, `ContactSection`, `ContactForm`, `ContactField`, `ContactTerminal`.
 - `lib/` — `format.ts`, `games.ts`, `scores.ts`, `storage.ts`, `session.ts`, `local-scores.ts`, `activity.ts`, `contact.ts`, `contact-email.ts`.
+- `lib/arcade/` — motores de juego. `engine.ts` (contrato `GameDefinition`/`GameEngine`/`GameCallbacks`), `registry.ts` (`getGameDefinition(gameId)`, solo `asteroids` tiene motor) y `asteroids/` (`constants.ts`, `math.ts`, `keyboard.ts`, `entities.ts`, `game.ts`, `index.ts`), el port a TypeScript de `references/started-games/02-asteroids/game.js`.
 - `lib/supabase/` — `env.ts` (`readSupabaseEnv`: URL y clave publicable, o `null`), `client.ts` (`createClient` para Client Components), `server.ts` (`createClient` async para Server Components, Server Actions y Route Handlers) y `proxy.ts` (`updateSession`, refresca la sesión).
 - `proxy.ts` — Proxy de Next 16 (antes `middleware.ts`): llama a `updateSession` en todas las rutas excepto assets estáticos e imágenes. Nunca redirige.
 - `app/about/actions.ts` — Server Action `sendContactMessage` que valida el mensaje de contacto y lo envía por Resend.
@@ -41,7 +42,7 @@ Arcade E1230 es una plataforma online para jugar y competir por la mayor cantida
 - `e1230_user` — sesión simulada (`SessionUser`): login, registro, Google, GitHub e invitado.
 - `e1230_scores` — puntuaciones locales por juego, mezcladas con los rankings mock deterministas de `lib/scores.ts`.
 
-Autenticación real, backend y ranking global en servidor quedan fuera de este spec; ver la sección «Fuera de alcance» de `specs/01-mvp-visual.md`. El código de servidor del proyecto es el envío del formulario de contacto (`app/about/actions.ts`), el proxy de sesión de Supabase (`proxy.ts`) y la sonda `/api/health`. Supabase todavía no guarda datos de la app: la sesión y las puntuaciones siguen simuladas en `localStorage`.
+Autenticación real, backend y ranking global en servidor quedan fuera de este spec; ver la sección «Fuera de alcance» de `specs/01-mvp-visual.md`. El código de servidor del proyecto es el envío del formulario de contacto (`app/about/actions.ts`), el proxy de sesión de Supabase (`proxy.ts`) y la sonda `/api/health`. Supabase todavía no guarda datos de la app: la sesión sigue simulada y las puntuaciones, incluidas las de ASTEROIDS (que ya se juega con un motor real), siguen en `localStorage`.
 
 ### Variables de entorno
 
