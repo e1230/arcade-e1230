@@ -9,14 +9,6 @@ export function pad2(n: number): string {
   return n.toString().padStart(2, "0");
 }
 
-export function formatToday(): string {
-  const now = new Date();
-  const day = pad2(now.getDate());
-  const month = pad2(now.getMonth() + 1);
-  const year = now.getFullYear();
-  return `${day}/${month}/${year}`;
-}
-
 // Zona fija para que el servidor y el navegador formateen igual (evita desajustes de hidratación)
 const SCORE_TIME_ZONE = "America/Bogota";
 

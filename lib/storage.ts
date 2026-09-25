@@ -2,7 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-export const STORAGE_KEYS = { user: "e1230_user", scores: "e1230_scores" } as const;
+export const STORAGE_KEYS = { user: "e1230_user" } as const;
 
 // Caché por clave: guarda el string crudo junto con el valor parseado,
 // así getSnapshot devuelve la misma referencia mientras localStorage no cambie
@@ -55,7 +55,10 @@ function subscribe(listener: () => void) {
 }
 
 export function useStoredValue<T>(key: string, fallback: T): T {
-  const getSnapshot = useCallback(() => getParsedValue(key, fallback), [key, fallback]);
+  const getSnapshot = useCallback(
+    () => getParsedValue(key, fallback),
+    [key, fallback],
+  );
   const getServerSnapshot = useCallback(() => fallback, [fallback]);
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
