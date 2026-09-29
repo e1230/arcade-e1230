@@ -1,8 +1,8 @@
 // Entidades de la partida, portadas de `references/started-games/02-asteroids/game.js`.
 // Cada entidad recibe el contexto de dibujo en `draw(ctx)` y no guarda estado global de módulo.
 
-import type { Keyboard } from "@/lib/arcade/asteroids/keyboard";
-import { rand, randInt, wrap } from "@/lib/arcade/asteroids/math";
+import type { Keyboard } from "@/lib/arcade/shared/keyboard";
+import { rand, randInt, wrap } from "@/lib/arcade/shared/math";
 import {
   BULLET_COOLDOWN,
   BULLET_SPEED,

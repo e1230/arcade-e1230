@@ -2,8 +2,8 @@
 // Todo el estado de la partida vive en el cierre de `createAsteroidsEngine`.
 
 import type { GameCallbacks, GameEngine } from "@/lib/arcade/engine";
-import { createKeyboard } from "@/lib/arcade/asteroids/keyboard";
-import { dist, rand } from "@/lib/arcade/asteroids/math";
+import { createKeyboard } from "@/lib/arcade/shared/keyboard";
+import { dist, rand } from "@/lib/arcade/shared/math";
 import {
   Asteroid,
   Bullet,
