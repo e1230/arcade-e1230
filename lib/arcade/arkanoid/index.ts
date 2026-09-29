@@ -8,6 +8,7 @@ export const arkanoidDefinition: GameDefinition = {
   controls: [
     // El mouse comparte fila con las flechas: `StartScreen` usa `action` como `key` de React
     { keys: "← → / MOUSE", action: "MOVER" },
+    { keys: "ESPACIO", action: "SACAR" }, // tras perder una vida
     { keys: "P", action: "PAUSA" },
   ],
   create: createArkanoidEngine,

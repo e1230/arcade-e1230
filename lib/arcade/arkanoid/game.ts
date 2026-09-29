@@ -66,6 +66,7 @@ interface ArkanoidState {
   score: number;
   lives: number;
   level: number; // 1 a 5
+  serving: boolean; // true tras perder una vida: la bola espera sobre la paleta hasta que se presione Espacio
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -82,6 +83,7 @@ function createInitialState(): ArkanoidState {
     score: 0,
     lives: INITIAL_LIVES,
     level: 1,
+    serving: false,
   };
 }
 
@@ -247,6 +249,9 @@ export function createArkanoidEngine(
       return true;
     }
     resetBall();
+    // Se descarta cualquier Espacio previo para que el saque no salga solo
+    keyboard.consume("Space");
+    state.serving = true;
     return false;
   }
 
@@ -260,6 +265,16 @@ export function createArkanoidEngine(
     }
 
     updatePaddle(dt);
+
+    // Saque manual: la bola acompaña a la paleta hasta que se presiona Espacio
+    if (state.serving) {
+      if (keyboard.consume("Space")) state.serving = false;
+      else {
+        state.ball.x = state.paddle.x + (PADDLE_W - BALL_SIZE) / 2;
+        updateExplosions(dt);
+        return;
+      }
+    }
 
     state.ball.x += state.ball.vx * dt;
     state.ball.y += state.ball.vy * dt;

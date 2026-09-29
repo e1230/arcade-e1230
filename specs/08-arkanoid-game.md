@@ -1,6 +1,6 @@
 # SPEC 08 — ARKANOID jugable en el Reproductor
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 05, SPEC 06, SPEC 07
 > **Fecha:** 2026-09-28
 > **Objetivo:** Portar a TypeScript el ARKANOID de `references/started-games/04-arkanoid/` y hacerlo jugable en `/games/arkanoid/play`, con su puntuación en el ranking global.
