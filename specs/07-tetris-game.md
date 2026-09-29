@@ -1,6 +1,6 @@
 # SPEC 07 — TETRIS jugable en el Reproductor
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 05, SPEC 06
 > **Fecha:** 2026-09-28
 > **Objetivo:** Portar a TypeScript el TETRIS de `references/started-games/03-tetris/` y hacerlo jugable en `/games/tetris/play`, con su puntuación en el ranking global.
