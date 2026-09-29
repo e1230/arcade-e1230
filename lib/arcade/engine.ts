@@ -19,9 +19,14 @@ export interface GameControl {
   action: string; // p. ej. "ROTAR"
 }
 
+export interface GameHud {
+  lives?: boolean; // por defecto true; false oculta la celda VIDAS del HUD
+}
+
 export interface GameDefinition {
   width: number; // resolución interna del canvas
   height: number;
   controls: GameControl[];
+  hud?: GameHud; // opcional: sin él, el HUD muestra todas las celdas
   create(canvas: HTMLCanvasElement, callbacks: GameCallbacks): GameEngine;
 }
