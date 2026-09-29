@@ -92,6 +92,8 @@ Las funcionalidades siguen el método spec-driven de [Klerith/fernando-skills](h
 - `/spec <descripción>`: hace preguntas de aclaración y luego escribe `specs/NN-slug.md` con el estado en Borrador (Draft). Crea `specs/.spec-config.yml` si el archivo no existe. Nunca escribe código.
 - `/spec-impl NN-slug`: solo corre cuando el estado del spec es Aprobado (Approved). Crea y cambia a una rama `spec-NN-slug` (controlado por `AutoCreateBranch` en `specs/.spec-config.yml`), luego implementa el plan paso a paso y se detiene para que el usuario revise cada diff. Nunca hace commit automáticamente.
 
+Para juegos hay un skill propio del proyecto, `/arcade-game <juego>`, en `.agents/skills/arcade-game/` y enlazado desde `.claude/skills/`. Recibe un id del catálogo, una carpeta de `references/started-games/` o la descripción de un juego nuevo. Hace las preguntas propias de un juego y escribe `specs/NN-<id>-game.md` en Borrador con la forma de los SPEC 05 y 06: motor en `lib/arcade/<id>/`, fila en `games` si hace falta y ranking. No escribe código; el spec aprobado se implementa con `/spec-impl`. Sus guías (`guides/`) documentan el contrato de motor, cómo portar una referencia, cómo diseñar un juego sin referencia y la integración con el catálogo y el ranking.
+
 No implementes funcionalidades grandes sin un spec aprobado en `specs/`. El usuario también instaló el skill `frontend-design` de Anthropic para trabajo de UI.
 
 ## Idiomas
