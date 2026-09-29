@@ -5,10 +5,18 @@ interface PlayerHudProps {
   lives: number;
   level: number;
   playerName: string;
+  showLives?: boolean; // false oculta la celda VIDAS (juegos sin vidas)
 }
 
-export function PlayerHud({ score, lives, level, playerName }: PlayerHudProps) {
-  const livesStr = "■".repeat(Math.max(0, lives)) + "□".repeat(Math.max(0, 3 - lives));
+export function PlayerHud({
+  score,
+  lives,
+  level,
+  playerName,
+  showLives = true,
+}: PlayerHudProps) {
+  const livesStr =
+    "■".repeat(Math.max(0, lives)) + "□".repeat(Math.max(0, 3 - lives));
 
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-px border border-cyan/30 bg-cyan/30">
@@ -18,12 +26,14 @@ export function PlayerHud({ score, lives, level, playerName }: PlayerHudProps) {
           {formatScore(score)}
         </span>
       </div>
-      <div className="flex flex-col gap-1.5 bg-surface px-3.5 py-2.5">
-        <span className="text-xs font-bold text-muted">VIDAS</span>
-        <span className="font-pixel text-base tracking-[4px] text-pink [text-shadow:var(--text-shadow-glow-pink)]">
-          {livesStr}
-        </span>
-      </div>
+      {showLives && (
+        <div className="flex flex-col gap-1.5 bg-surface px-3.5 py-2.5">
+          <span className="text-xs font-bold text-muted">VIDAS</span>
+          <span className="font-pixel text-base tracking-[4px] text-pink [text-shadow:var(--text-shadow-glow-pink)]">
+            {livesStr}
+          </span>
+        </div>
+      )}
       <div className="flex flex-col gap-1.5 bg-surface px-3.5 py-2.5">
         <span className="text-xs font-bold text-muted">NIVEL</span>
         <span className="font-pixel text-base text-cyan [text-shadow:var(--text-shadow-glow-cyan)]">
@@ -32,7 +42,7 @@ export function PlayerHud({ score, lives, level, playerName }: PlayerHudProps) {
       </div>
       <div className="flex flex-col gap-1.5 bg-surface px-3.5 py-2.5">
         <span className="text-xs font-bold text-muted">JUGADOR</span>
-        <span className="overflow-hidden text-ellipsis text-base font-bold text-foreground">
+        <span className="overflow-hidden text-base font-bold text-ellipsis text-foreground">
           {playerName}
         </span>
       </div>

@@ -243,6 +243,7 @@ export function PlayerView({ game }: PlayerViewProps) {
         lives={state.lives}
         level={state.level}
         playerName={playerName}
+        showLives={definition?.hud?.lives ?? true}
       />
 
       <CrtScreen loading={state.status === "loading"} paused={state.paused}>
