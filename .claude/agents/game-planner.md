@@ -2,7 +2,7 @@
 name: game-planner
 description: Planifica y decide qué juego agregar a Arcade E1230. Evalúa los pendientes del catálogo y juegos nuevos contra el contrato de motor, el ranking por puntos, la variedad del catálogo y el costo; recomienda el siguiente y guarda el historial de sugerencias en references/game-suggestions-todo.md para no repetirlas. Úsalo cuando se pregunte qué juego hacer después o para descartar o repriorizar una sugerencia. No escribe specs ni código.
 tools: Read, Glob, Grep, Write, Edit, Bash, mcp__supabase__execute_sql
-model: opus
+model: sonnet
 effort: high
 color: cyan
 ---
