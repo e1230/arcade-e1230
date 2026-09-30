@@ -1,13 +1,15 @@
 import type { ReactNode } from "react";
 import { PixelLoader } from "@/components/game/PixelLoader";
+import type { SkinId } from "@/lib/arcade/engine";
 
 interface CrtScreenProps {
   loading: boolean;
   paused: boolean;
+  skin: SkinId;
   children: ReactNode;
 }
 
-export function CrtScreen({ loading, paused, children }: CrtScreenProps) {
+export function CrtScreen({ loading, paused, skin, children }: CrtScreenProps) {
   return (
     <div className="rounded-[30px] bg-linear-to-br from-[#1c1c26] to-[#0e0e14] p-3.5 shadow-cabinet md:p-7.5">
       <div className="relative aspect-4/3 overflow-hidden rounded-[26px/36px] bg-deep shadow-[inset_0_0_50px_rgba(0,0,0,.9),0_0_0_3px_#050507]">
@@ -17,13 +19,17 @@ export function CrtScreen({ loading, paused, children }: CrtScreenProps) {
 
         {paused && !loading && (
           <div className="absolute inset-0 z-[3] flex items-center justify-center bg-deep/75">
-            <span className="motion-safe:animate-blink font-pixel text-2xl text-yellow [text-shadow:var(--text-shadow-glow-yellow)]">
+            <span className="font-pixel text-2xl text-yellow [text-shadow:var(--text-shadow-glow-yellow)] motion-safe:animate-blink">
               PAUSA
             </span>
           </div>
         )}
 
-        <div className="bg-crt pointer-events-none absolute inset-0 z-[4]" />
+        <div className="pointer-events-none absolute inset-0 z-[4] bg-crt" />
+
+        {skin === "retro" && (
+          <div className="pointer-events-none absolute inset-0 z-[4] bg-scanlines-retro" />
+        )}
       </div>
       <div className="mt-3.5 flex items-center justify-between px-1.5">
         <span className="font-pixel text-[9px] text-[#3c3c4c]">E1230-CRT</span>

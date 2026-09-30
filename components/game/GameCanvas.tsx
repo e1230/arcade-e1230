@@ -1,15 +1,25 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { GameCallbacks, GameDefinition } from "@/lib/arcade/engine";
+import type {
+  GameCallbacks,
+  GameDefinition,
+  SkinId,
+} from "@/lib/arcade/engine";
 
 interface GameCanvasProps {
   definition: GameDefinition;
   paused: boolean;
   callbacks: GameCallbacks;
+  skin: SkinId;
 }
 
-export function GameCanvas({ definition, paused, callbacks }: GameCanvasProps) {
+export function GameCanvas({
+  definition,
+  paused,
+  callbacks,
+  skin,
+}: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const callbacksRef = useRef(callbacks);
   useEffect(() => {
@@ -25,12 +35,16 @@ export function GameCanvas({ definition, paused, callbacks }: GameCanvasProps) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const engine = definition.create(canvas, {
-      onScore: (score) => callbacksRef.current.onScore(score),
-      onLives: (lives) => callbacksRef.current.onLives(lives),
-      onLevel: (level) => callbacksRef.current.onLevel(level),
-      onGameOver: (finalScore) => callbacksRef.current.onGameOver(finalScore),
-    });
+    const engine = definition.create(
+      canvas,
+      {
+        onScore: (score) => callbacksRef.current.onScore(score),
+        onLives: (lives) => callbacksRef.current.onLives(lives),
+        onLevel: (level) => callbacksRef.current.onLevel(level),
+        onGameOver: (finalScore) => callbacksRef.current.onGameOver(finalScore),
+      },
+      { skin },
+    );
     engineRef.current = engine;
     appliedPausedRef.current = false;
     engine.start();
@@ -39,8 +53,7 @@ export function GameCanvas({ definition, paused, callbacks }: GameCanvasProps) {
       engine.destroy();
       engineRef.current = null;
     };
-     
-  }, [definition]);
+  }, [definition, skin]);
 
   useEffect(() => {
     const engine = engineRef.current;
@@ -55,7 +68,7 @@ export function GameCanvas({ definition, paused, callbacks }: GameCanvasProps) {
       ref={canvasRef}
       width={definition.width}
       height={definition.height}
-      className="absolute inset-0 h-full w-full"
+      className={`absolute inset-0 h-full w-full${skin === "retro" ? "[image-rendering:pixelated]" : ""}`}
     />
   );
 }
