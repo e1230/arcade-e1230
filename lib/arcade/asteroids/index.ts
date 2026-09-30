@@ -1,5 +1,6 @@
 import type { GameDefinition } from "@/lib/arcade/engine";
 import { HEIGHT, WIDTH } from "@/lib/arcade/asteroids/constants";
+import { SKIN_IDS } from "@/lib/arcade/shared/skins";
 import { createAsteroidsEngine } from "@/lib/arcade/asteroids/game";
 
 export const asteroidsDefinition: GameDefinition = {
@@ -11,5 +12,6 @@ export const asteroidsDefinition: GameDefinition = {
     { keys: "ESPACIO", action: "DISPARAR" },
     { keys: "P", action: "PAUSA" },
   ],
+  skins: SKIN_IDS,
   create: createAsteroidsEngine,
 };

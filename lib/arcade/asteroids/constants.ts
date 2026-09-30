@@ -37,13 +37,6 @@ export const MAX_DT = 0.05; // s, tope del salto de tiempo por frame
 
 export const SHIP_ASTEROID_COLLISION_FACTOR = 0.82;
 
-// Colores del canvas, espejo de los tokens de `app/globals.css`.
-export const COLORS = {
-  background: "#05050a", // --deep
-  ship: "#00f5ff", // --neon-cyan
-  asteroid: "#ff006e", // --neon-pink
-  bullet: "#f5ff00", // --neon-yellow
-  powerUp: "#00ff88", // --neon-green
-  flame: "#ff8c42", // --bronze
-  particle: "255, 0, 110", // rosa en RGB para el alfa que se desvanece
-} as const;
+// Fuentes del texto que se dibuja sobre el canvas principal (iguales en las tres skins).
+export const POWERUP_LABEL_FONT = "bold 14px monospace";
+export const COUNTER_FONT = "15px monospace";
