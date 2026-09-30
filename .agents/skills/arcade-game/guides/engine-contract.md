@@ -24,13 +24,28 @@ export interface GameControl {
   action: string; // p. ej. "ROTAR"
 }
 
+// Apariencia de un juego: Clásico (por defecto), Neón o Retro (SPEC 10).
+export type SkinId = "classic" | "neon" | "retro";
+
+export interface GameOptions {
+  skin: SkinId;
+}
+
 export interface GameDefinition {
   width: number; // resolución interna del canvas
   height: number;
   controls: GameControl[];
-  create(canvas: HTMLCanvasElement, callbacks: GameCallbacks): GameEngine;
+  hud?: GameHud; // opcional: { lives?: boolean }; false oculta la celda VIDAS
+  skins?: readonly SkinId[]; // opcional: sin él, el Reproductor no muestra selector de skin
+  create(
+    canvas: HTMLCanvasElement,
+    callbacks: GameCallbacks,
+    options?: GameOptions,
+  ): GameEngine;
 }
 ```
+
+`skins` y `options` son opcionales: un motor que no los usa sigue compilando y se ve igual. Un juego con skins declara `skins: SKIN_IDS` (de `lib/arcade/shared/skins.ts`) y lee `options?.skin ?? DEFAULT_SKIN` al crearse.
 
 Qué exige cada método:
 
@@ -45,7 +60,7 @@ Qué exige cada método:
 Quién hace qué:
 
 - `PlayerView` maneja la tecla P, el botón PAUSA/SEGUIR, la pausa automática (`visibilitychange` y `blur`), el inicio con Espacio o INICIAR desde `StartScreen`, y el reinicio con JUGAR DE NUEVO (desmonta `GameCanvas` y el motor se destruye). **El motor no maneja P ni reinicia la partida.**
-- `GameCanvas` crea el motor en un `useEffect` que depende solo de `definition`, llama a `start()`, y a `pause()`/`resume()` según `paused`.
+- `GameCanvas` crea el motor en un `useEffect` que depende de `definition` y `skin`, pasa `{ skin }` a `create`, llama a `start()`, y a `pause()`/`resume()` según `paused`.
 - `PlayerHud` muestra PUNTUACIÓN, VIDAS, NIVEL y JUGADOR con lo que emiten los callbacks.
 - `GameOverModal` muestra la puntuación final y guarda en `scores` con `insertScore`.
 
@@ -55,9 +70,11 @@ Con `lib/arcade/asteroids/` como ejemplo:
 
 ```
 lib/arcade/<id>/
-  constants.ts   dimensiones, constantes de jugabilidad y COLORS
-  entities.ts    clases o fábricas de entidades con update(dt, …) y draw(ctx)   (o model.ts si es un tablero)
-  game.ts        create<Pascal>Engine(canvas, callbacks): GameEngine
+  constants.ts   dimensiones, constantes de jugabilidad y fuentes del texto del canvas
+  skins.ts       (si el juego tiene skins) SKINS: Record<SkinId, <Pascal>Skin>, con todos los colores y trazos
+  render.ts      (si aplica) funciones de dibujo que sirven a las tres skins
+  entities.ts    clases o fábricas de entidades con update(dt, …) y draw(ctx, skin)   (o model.ts si es un tablero)
+  game.ts        create<Pascal>Engine(canvas, callbacks, options?): GameEngine
   index.ts       export const <camel>Definition: GameDefinition
   levels.ts      (si aplica) niveles tipados
   sprites.ts     (si aplica) carga y dibujo de imágenes
@@ -90,7 +107,7 @@ Hoy `createKeyboard` (`keyboard.ts`) y `wrap`/`dist`/`rand`/`randInt` (`math.ts`
 - TypeScript sin React ni JSX, y sin `"use client"`.
 - `window`, `document`, `Image` y `Audio` solo se tocan dentro de `create()` (o de funciones que llama), nunca a nivel de módulo: importarlos desde un Client Component no puede romper el prerender.
 - Sin variables de módulo con estado mutable: todo el estado de la partida vive en el cierre de `create<Pascal>Engine`.
-- Las entidades reciben el `CanvasRenderingContext2D` en `draw(ctx)` y el teclado en `update(dt, keyboard)`.
+- Las entidades reciben el `CanvasRenderingContext2D` y la skin en `draw(ctx, skin)` (sin skins, solo `draw(ctx)`), y el teclado en `update(dt, keyboard)`.
 - El loop se mueve por `dt` en segundos con tope `MAX_DT = 0.05`. **Sin `setTimeout` ni `setInterval`**: los tiempos (caída de piezas, respawn, animaciones) son acumuladores que avanzan con `dt`, para que la pausa congele todo.
 - Código en inglés, comentarios en español latinoamericano, archivos en kebab-case.
 
@@ -98,7 +115,7 @@ Hoy `createKeyboard` (`keyboard.ts`) y `wrap`/`dist`/`rand`/`randInt` (`math.ts`
 
 - **No dibuja** PUNTUACIÓN, VIDAS, NIVEL, GAME OVER ni PAUSA: eso lo muestran `PlayerHud`, `GameOverModal` y el overlay de `CrtScreen`.
 - **Sí dibuja** los indicadores propios del juego que no tienen lugar en el HUD (en Asteroids, «3x 4.2s» del power-up). Con fuente `monospace`, porque las fuentes de `next/font` tienen nombres de familia generados.
-- Colores en una constante `COLORS` de `constants.ts`, como espejo de los tokens de `app/globals.css`, con el token de origen comentado (`// --neon-cyan`). El canvas no puede usar clases de Tailwind.
+- Colores en `SKINS` de `skins.ts` (una entrada por `SkinId`), nunca sueltos en las entidades. La skin Neón espeja los tokens de `app/globals.css`, con el token de origen comentado (`// --neon-cyan`); Retro sale de `RETRO_PHOSPHOR` o `RETRO_8BIT`. Un juego sin skins todavía usa una constante `COLORS` en `constants.ts`, que se reemplaza por `SKINS` cuando se le agregan. El canvas no puede usar clases de Tailwind.
 - El glow se hace con `shadowBlur` y `shadowColor`. Evítalo en objetos muy numerosos (partículas) por rendimiento.
 
 ## Resolución: siempre 4:3
