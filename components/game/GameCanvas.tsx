@@ -68,7 +68,11 @@ export function GameCanvas({
       ref={canvasRef}
       width={definition.width}
       height={definition.height}
-      className={`absolute inset-0 h-full w-full${skin === "retro" ? "[image-rendering:pixelated]" : ""}`}
+      className={
+        skin === "retro"
+          ? "absolute inset-0 h-full w-full [image-rendering:pixelated]"
+          : "absolute inset-0 h-full w-full"
+      }
     />
   );
 }
