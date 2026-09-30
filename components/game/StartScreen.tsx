@@ -47,7 +47,7 @@ export function StartScreen({
   const isCoarsePointer = useIsCoarsePointer();
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-deep p-3 text-center sm:gap-4.5 sm:p-6">
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-deep p-3 text-center sm:gap-4.5 sm:p-6">
       <span className="font-pixel text-xs text-cyan">{title}</span>
 
       <table className="text-sm text-muted">
