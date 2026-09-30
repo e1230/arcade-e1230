@@ -163,6 +163,15 @@ textarea::placeholder {
     );
 }
 
+/* Scanlines marcadas de la skin Retro: 2 px oscuros cada 4 px, en píxeles CSS (no escalan con el canvas) */
+@utility bg-scanlines-retro {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.35) 0 2px,
+    transparent 2px 4px
+  );
+}
+
 @utility bg-top-glow {
   background: radial-gradient(
     ellipse at 50% 0%,
