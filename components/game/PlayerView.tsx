@@ -7,11 +7,13 @@ import { GameOverModal } from "@/components/game/GameOverModal";
 import { PlayerHud } from "@/components/game/PlayerHud";
 import { StartScreen } from "@/components/game/StartScreen";
 import { NeonButton } from "@/components/ui/NeonButton";
-import type { GameCallbacks } from "@/lib/arcade/engine";
+import type { GameCallbacks, SkinId } from "@/lib/arcade/engine";
 import { getGameDefinition } from "@/lib/arcade/registry";
+import { DEFAULT_SKIN, isSkinId } from "@/lib/arcade/shared/skins";
 import { ACCENTS, type Game } from "@/lib/games";
 import { insertScore } from "@/lib/leaderboard-client";
 import { getPlayerName, useSession } from "@/lib/session";
+import { STORAGE_KEYS, useStoredValue, writeStoredValue } from "@/lib/storage";
 
 type PlayerStatus = "loading" | "ready" | "simulating" | "playing" | "over";
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -42,6 +44,9 @@ const TICKS_TO_LOSE_LIFE = 12;
 const TICKS_TO_END = 36;
 const TYPE_MS = 60;
 const SAVE_MESSAGE = "PUNTUACIÓN GUARDADA";
+
+// Fuera del componente: referencia estable para useSyncExternalStore
+const EMPTY_SKINS: Readonly<Record<string, unknown>> = {};
 
 interface PlayerViewProps {
   game: Game;
@@ -126,6 +131,31 @@ export function PlayerView({ game }: PlayerViewProps) {
   }, [togglePause]);
 
   const definition = useMemo(() => getGameDefinition(game.id), [game.id]);
+
+  const storedSkins = useStoredValue<Readonly<Record<string, unknown>>>(
+    STORAGE_KEYS.skins,
+    EMPTY_SKINS,
+  );
+  // Respaldo en memoria: si localStorage está bloqueado, la elección igual vale durante la visita
+  const [skinOverride, setSkinOverride] = useState<SkinId | null>(null);
+
+  // Un JSON como `null` o un arreglo no es un mapa válido: se trata como vacío
+  const safeSkins =
+    typeof storedSkins === "object" &&
+    storedSkins !== null &&
+    !Array.isArray(storedSkins)
+      ? storedSkins
+      : EMPTY_SKINS;
+  const candidate = skinOverride ?? safeSkins[game.id];
+  const skin: SkinId =
+    isSkinId(candidate) && definition?.skins?.includes(candidate)
+      ? candidate
+      : DEFAULT_SKIN;
+
+  function handleSkinChange(next: SkinId) {
+    setSkinOverride(next);
+    writeStoredValue(STORAGE_KEYS.skins, { ...safeSkins, [game.id]: next });
+  }
 
   const handleStart = useCallback(() => {
     if (stateRef.current.status !== "ready") return;
@@ -246,12 +276,19 @@ export function PlayerView({ game }: PlayerViewProps) {
         showLives={definition?.hud?.lives ?? true}
       />
 
-      <CrtScreen loading={state.status === "loading"} paused={state.paused}>
+      <CrtScreen
+        loading={state.status === "loading"}
+        paused={state.paused}
+        skin={skin}
+      >
         {state.status === "ready" &&
           (definition ? (
             <StartScreen
               title={game.title}
               controls={definition.controls}
+              skins={definition.skins}
+              skin={skin}
+              onSkinChange={handleSkinChange}
               onStart={handleStart}
             />
           ) : (
@@ -284,6 +321,7 @@ export function PlayerView({ game }: PlayerViewProps) {
               definition={definition}
               paused={state.paused}
               callbacks={callbacks}
+              skin={skin}
             />
           )}
       </CrtScreen>

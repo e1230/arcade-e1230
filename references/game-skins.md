@@ -23,9 +23,9 @@ La skin se elige en la pantalla de inicio del Reproductor y se recuerda por jueg
 
 ## Base común
 
-- **Estado:** `[~]` En spec. La trae el spec de skins de `asteroids`, el primer juego pedido.
-- **Spec:** `specs/10-asteroids-skins.md` (Borrador)
-- **Incluye:** `SkinId`, `GameOptions` y `GameDefinition.skins` en `lib/arcade/engine.ts`; `lib/arcade/shared/skins.ts`; selector en `StartScreen`; clave `e1230_skins`; `skin` en `GameCanvas` y `CrtScreen`.
+- **Estado:** `[x]` Implementada (2026-09-30). La trajo el spec de skins de `asteroids`, el primer juego pedido.
+- **Spec:** `specs/10-asteroids-skins.md`
+- **Incluye:** `SkinId`, `GameOptions` y `GameDefinition.skins` en `lib/arcade/engine.ts`; `lib/arcade/shared/skins.ts`; selector en `StartScreen`; clave `e1230_skins`; `skin` en `GameCanvas` y `CrtScreen`; utilidad CSS `bg-scanlines-retro`.
 
 ## Resumen
 
@@ -34,7 +34,7 @@ La skin se elige en la pantalla de inicio del Reproductor y se recuerda por jueg
 | `[ ]`  | `arkanoid`  | ARKANOID       | —       | —    | —     | —      | —          | —    | 2026-09-30  |
 | `[ ]`  | `tetris`    | TETRIS         | —       | —    | —     | —      | —          | —    | 2026-09-30  |
 | `[ ]`  | `snake`     | SNAKE          | —       | —    | —     | —      | —          | —    | 2026-09-30  |
-| `[~]`  | `asteroids` | ASTEROIDS      | Blanco sobre negro | `COLORS` actual | Fósforo verde | Medido en spec (2026-09-30) | Por verificar | `specs/10-asteroids-skins.md` (Borrador) | 2026-09-30  |
+| `[x]`  | `asteroids` | ASTEROIDS      | Blanco sobre negro | `COLORS` anterior | Fósforo verde | Medido en spec (2026-09-30) | Verificado a 320, 375, 768 y 1280 px (2026-09-30) | `specs/10-asteroids-skins.md` | 2026-09-30  |
 | `[/]`  | `pacman`    | PAC-MAN        | —       | —    | —     | —      | —          | —    | 2026-09-30  |
 | `[/]`  | `invaders`  | SPACE INVADERS | —       | —    | —     | —      | —          | —    | 2026-09-30  |
 | `[/]`  | `frogger`   | FROGGER        | —       | —    | —     | —      | —          | —    | 2026-09-30  |
@@ -44,14 +44,16 @@ La skin se elige en la pantalla de inicio del Reproductor y se recuerda por jueg
 
 ### `asteroids` — ASTEROIDS
 
-- **Estado:** `[~]` En spec · **Spec:** `specs/10-asteroids-skins.md` (Borrador, incluye la base común)
+- **Estado:** `[x]` Implementado · **Spec:** `specs/10-asteroids-skins.md` (incluye la base común)
 - **Clásico:** vector blanco sobre negro, como la máquina de Atari de 1979 y el port de `references/started-games/02-asteroids/game.js` (`#000`, `#fff`, power-up `#0ff`, llama `rgba(255,130,0,.85)`). Sin glow.
-- **Neón:** el `COLORS` actual sin cambiar un color (cian, rosa, amarillo, verde, bronce sobre `--deep`), con glow `shadowBlur` 8.
+- **Neón:** el `COLORS` anterior (hoy `SKINS.neon`) sin cambiar un color (cian, rosa, amarillo, verde, bronce sobre `--deep`), con glow `shadowBlur` 8.
 - **Retro:** fósforo verde `RETRO_PHOSPHOR`, dibujado en un búfer de 200×150 ampliado 4× (pixel art con Bresenham), scanlines en CSS.
 - **Contraste mínimo:** Clásico 6,22:1 (llama; texto 16,75:1) · Neón 5,30:1 (asteroides; texto 15,17:1) · Retro 3,71:1 (llama; texto 15,21:1)
 - **Historial:**
   - 2026-09-30 — Spec de skins escrito (con la base común).
+  - 2026-09-30 — Implementado (SPEC 10). Verificado a 1280 y 768 px en las tres skins; el selector de `StartScreen` cabe a 320 px (hubo que ocultar «PRESIONA ESPACIO» y bajar el gap en anchos pequeños).
 
 ## Historial de sesiones
 
+- 2026-09-30 — Implementación del SPEC 10: la base común y `asteroids` pasan a `[x]`.
 - 2026-09-30 — «skins para asteroids» (modo aplicar): escrito `specs/10-asteroids-skins.md` en Borrador, con la base común; el registro pasa la base y `asteroids` a `[~]`.

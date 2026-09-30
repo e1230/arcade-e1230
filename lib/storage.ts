@@ -2,7 +2,10 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-export const STORAGE_KEYS = { user: "e1230_user" } as const;
+export const STORAGE_KEYS = {
+  user: "e1230_user",
+  skins: "e1230_skins", // { [gameId]: SkinId }, la skin elegida por juego
+} as const;
 
 // Caché por clave: guarda el string crudo junto con el valor parseado,
 // así getSnapshot devuelve la misma referencia mientras localStorage no cambie

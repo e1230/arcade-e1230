@@ -1,9 +1,15 @@
 // Motor de Asteroids, portado de `references/started-games/02-asteroids/game.js`.
 // Todo el estado de la partida vive en el cierre de `createAsteroidsEngine`.
 
-import type { GameCallbacks, GameEngine } from "@/lib/arcade/engine";
+import type {
+  GameCallbacks,
+  GameEngine,
+  GameOptions,
+} from "@/lib/arcade/engine";
 import { createKeyboard } from "@/lib/arcade/shared/keyboard";
 import { dist, rand } from "@/lib/arcade/shared/math";
+import { DEFAULT_SKIN } from "@/lib/arcade/shared/skins";
+import { SKINS } from "@/lib/arcade/asteroids/skins";
 import {
   Asteroid,
   Bullet,
@@ -13,7 +19,7 @@ import {
 } from "@/lib/arcade/asteroids/entities";
 import {
   ASTEROIDS_PER_LEVEL_OFFSET,
-  COLORS,
+  COUNTER_FONT,
   HEIGHT,
   INITIAL_ASTEROIDS,
   MAX_DT,
@@ -48,11 +54,25 @@ interface AsteroidsState {
 export function createAsteroidsEngine(
   canvas: HTMLCanvasElement,
   callbacks: GameCallbacks,
+  options?: GameOptions,
 ): GameEngine {
   const context2d = canvas.getContext("2d");
   if (!context2d)
     throw new Error("No se pudo obtener el contexto 2d del canvas");
   const ctx: CanvasRenderingContext2D = context2d;
+  const skin = SKINS[options?.skin ?? DEFAULT_SKIN];
+
+  // Retro dibuja la escena en un búfer reducido y la amplía sin suavizado; el canvas visible conserva su tamaño
+  let buffer: HTMLCanvasElement | null = null;
+  let bufferCtx: CanvasRenderingContext2D | null = null;
+  if (skin.pixelScale > 1) {
+    buffer = document.createElement("canvas");
+    buffer.width = Math.ceil(WIDTH / skin.pixelScale);
+    buffer.height = Math.ceil(HEIGHT / skin.pixelScale);
+    bufferCtx = buffer.getContext("2d");
+    if (!bufferCtx)
+      throw new Error("No se pudo obtener el contexto 2d del búfer");
+  }
 
   const keyboard = createKeyboard();
 
@@ -229,20 +249,31 @@ export function createAsteroidsEngine(
   }
 
   function draw(): void {
-    ctx.fillStyle = COLORS.background;
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    const target = bufferCtx ?? ctx;
+    const targetWidth = buffer ? buffer.width : WIDTH;
+    const targetHeight = buffer ? buffer.height : HEIGHT;
 
-    state.particles.forEach((p) => p.draw(ctx));
-    state.asteroids.forEach((a) => a.draw(ctx));
-    state.powerUps.forEach((p) => p.draw(ctx));
-    state.bullets.forEach((b) => b.draw(ctx));
-    state.ship.draw(ctx);
+    target.fillStyle = skin.background;
+    target.fillRect(0, 0, targetWidth, targetHeight);
 
+    state.particles.forEach((p) => p.draw(target, skin));
+    state.asteroids.forEach((a) => a.draw(target, skin));
+    state.powerUps.forEach((p) => p.draw(target, skin));
+    state.bullets.forEach((b) => b.draw(target, skin));
+    state.ship.draw(target, skin);
+
+    if (buffer) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(buffer, 0, 0, WIDTH, HEIGHT);
+    }
+
+    // El texto va siempre sobre el canvas principal, a tamaño completo
+    state.powerUps.forEach((p) => p.drawLabel(ctx, skin));
     if (state.ship.tripleShot > 0) {
       ctx.textAlign = "left";
       ctx.textBaseline = "alphabetic";
-      ctx.fillStyle = COLORS.powerUp;
-      ctx.font = "15px monospace";
+      ctx.fillStyle = skin.powerUp;
+      ctx.font = COUNTER_FONT;
       ctx.fillText(`3x  ${state.ship.tripleShot.toFixed(1)}s`, 14, 26);
     }
   }

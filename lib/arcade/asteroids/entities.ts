@@ -1,5 +1,5 @@
 // Entidades de la partida, portadas de `references/started-games/02-asteroids/game.js`.
-// Cada entidad recibe el contexto de dibujo en `draw(ctx)` y no guarda estado global de módulo.
+// Cada entidad recibe el contexto de dibujo y la skin en `draw(ctx, skin)` y no guarda estado global de módulo.
 
 import type { Keyboard } from "@/lib/arcade/shared/keyboard";
 import { rand, randInt, wrap } from "@/lib/arcade/shared/math";
@@ -7,8 +7,8 @@ import {
   BULLET_COOLDOWN,
   BULLET_SPEED,
   BULLET_TTL,
-  COLORS,
   HEIGHT,
+  POWERUP_LABEL_FONT,
   POWERUP_TTL,
   RADII,
   SHIP_DRAG,
@@ -20,15 +20,14 @@ import {
   TRIPLE_SPREAD,
   WIDTH,
 } from "@/lib/arcade/asteroids/constants";
-
-function applyGlow(ctx: CanvasRenderingContext2D, color: string): void {
-  ctx.shadowBlur = 8;
-  ctx.shadowColor = color;
-}
-
-function clearGlow(ctx: CanvasRenderingContext2D): void {
-  ctx.shadowBlur = 0;
-}
+import {
+  applyGlow,
+  clearGlow,
+  fillPixels,
+  hexToRgba,
+  strokeShape,
+} from "@/lib/arcade/asteroids/render";
+import type { AsteroidsSkin } from "@/lib/arcade/asteroids/skins";
 
 export class Bullet {
   x: number;
@@ -53,9 +52,20 @@ export class Bullet {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
-    applyGlow(ctx, COLORS.bullet);
-    ctx.fillStyle = COLORS.bullet;
+  draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin): void {
+    if (skin.pixelScale > 1) {
+      // Cuadrado de 2×2 píxeles lógicos centrado en la bala
+      fillPixels(
+        ctx,
+        Math.floor(this.x / skin.pixelScale) - 1,
+        Math.floor(this.y / skin.pixelScale) - 1,
+        2,
+        skin.bullet,
+      );
+      return;
+    }
+    applyGlow(ctx, skin, skin.bullet);
+    ctx.fillStyle = skin.bullet;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -110,22 +120,17 @@ export class Asteroid {
     ];
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate(this.rot);
-    applyGlow(ctx, COLORS.asteroid);
-    ctx.strokeStyle = COLORS.asteroid;
-    ctx.lineWidth = 1.5;
-    ctx.lineJoin = "round";
-    ctx.beginPath();
-    ctx.moveTo(this.verts[0][0], this.verts[0][1]);
-    for (let i = 1; i < this.verts.length; i++)
-      ctx.lineTo(this.verts[i][0], this.verts[i][1]);
-    ctx.closePath();
-    ctx.stroke();
+  draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin): void {
+    applyGlow(ctx, skin, skin.asteroid);
+    strokeShape(
+      ctx,
+      skin,
+      { x: this.x, y: this.y, rotation: this.rot },
+      this.verts,
+      skin.asteroid,
+      true,
+    );
     clearGlow(ctx);
-    ctx.restore();
   }
 }
 
@@ -154,21 +159,48 @@ export class PowerUp {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
-    if (this.ttl < 2 && Math.floor(this.ttl * 8) % 2 === 0) return;
+  // Parpadeo final: durante los últimos 2 s el power-up y su texto se apagan por tramos
+  private blinkedOut(): boolean {
+    return this.ttl < 2 && Math.floor(this.ttl * 8) % 2 === 0;
+  }
+
+  draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin): void {
+    if (this.blinkedOut()) return;
     const pulse = 0.85 + Math.sin(performance.now() / 150) * 0.15;
+    const r = this.radius * pulse;
+    if (skin.pixelScale > 1) {
+      // Rombo: el cuadrado de lado 2r girado 45°
+      strokeShape(
+        ctx,
+        skin,
+        { x: this.x, y: this.y, rotation: Math.PI / 4 },
+        [
+          [-r, -r],
+          [r, -r],
+          [r, r],
+          [-r, r],
+        ],
+        skin.powerUp,
+        true,
+      );
+      return;
+    }
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(Math.PI / 4);
-    applyGlow(ctx, COLORS.powerUp);
-    ctx.strokeStyle = COLORS.powerUp;
-    ctx.lineWidth = 2;
-    const r = this.radius * pulse;
+    applyGlow(ctx, skin, skin.powerUp);
+    ctx.strokeStyle = skin.powerUp;
+    ctx.lineWidth = skin.lineWidth;
     ctx.strokeRect(-r, -r, r * 2, r * 2);
     clearGlow(ctx);
     ctx.restore();
-    ctx.fillStyle = COLORS.powerUp;
-    ctx.font = "bold 12px monospace";
+  }
+
+  // El texto «3x» se dibuja sobre el canvas principal (nunca en el búfer de Retro) para leerse a tamaño completo
+  drawLabel(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin): void {
+    if (this.blinkedOut()) return;
+    ctx.fillStyle = skin.powerUp;
+    ctx.font = POWERUP_LABEL_FONT;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("3x", this.x, this.y);
@@ -202,10 +234,22 @@ export class Particle {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
+  draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin): void {
     const alpha = this.ttl / this.life;
-    ctx.strokeStyle = `rgba(${COLORS.particle}, ${alpha.toFixed(2)})`;
-    ctx.lineWidth = 1;
+    if (skin.pixelScale > 1) {
+      // Un píxel lógico sin transparencia que se apaga por pasos
+      if (alpha > 0.25)
+        fillPixels(
+          ctx,
+          Math.floor(this.x / skin.pixelScale),
+          Math.floor(this.y / skin.pixelScale),
+          1,
+          skin.particle,
+        );
+      return;
+    }
+    ctx.strokeStyle = hexToRgba(skin.particle, alpha);
+    ctx.lineWidth = skin.particleWidth;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
     ctx.lineTo(this.x - this.vx * 0.05, this.y - this.vy * 0.05);
@@ -275,37 +319,45 @@ export class Ship {
     return [new Bullet(ox, oy, this.angle)];
   }
 
-  draw(ctx: CanvasRenderingContext2D): void {
+  draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin): void {
     if (this.dead) return;
     if (this.invincible > 0 && Math.floor(this.invincible * 8) % 2 === 0)
       return;
 
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.rotate(this.angle);
-    applyGlow(ctx, COLORS.ship);
-    ctx.strokeStyle = COLORS.ship;
-    ctx.lineWidth = 1.5;
-    ctx.lineJoin = "round";
-
-    ctx.beginPath();
-    ctx.moveTo(20, 0);
-    ctx.lineTo(-12, -9);
-    ctx.lineTo(-7, 0);
-    ctx.lineTo(-12, 9);
-    ctx.closePath();
-    ctx.stroke();
+    const origin = { x: this.x, y: this.y, rotation: this.angle };
+    // El glow (solo Neón) envuelve casco y llama con el color de la nave
+    applyGlow(ctx, skin, skin.ship);
+    strokeShape(
+      ctx,
+      skin,
+      origin,
+      [
+        [20, 0],
+        [-12, -9],
+        [-7, 0],
+        [-12, 9],
+      ],
+      skin.ship,
+      true,
+    );
 
     if (this.thrusting && Math.random() > 0.35) {
-      ctx.beginPath();
-      ctx.moveTo(-8, -4);
-      ctx.lineTo(-8 - rand(6, 14), 0);
-      ctx.lineTo(-8, 4);
-      ctx.strokeStyle = COLORS.flame;
-      ctx.stroke();
+      ctx.globalAlpha = skin.flameAlpha;
+      strokeShape(
+        ctx,
+        skin,
+        origin,
+        [
+          [-8, -4],
+          [-8 - rand(6, 14), 0],
+          [-8, 4],
+        ],
+        skin.flame,
+        false,
+      );
+      ctx.globalAlpha = 1;
     }
 
     clearGlow(ctx);
-    ctx.restore();
   }
 }
