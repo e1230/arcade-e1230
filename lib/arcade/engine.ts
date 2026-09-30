@@ -23,10 +23,23 @@ export interface GameHud {
   lives?: boolean; // por defecto true; false oculta la celda VIDAS del HUD
 }
 
+// Apariencia de un juego: Clásico (por defecto), Neón o Retro.
+export type SkinId = "classic" | "neon" | "retro";
+
+// Opciones que el Reproductor pasa al motor al crearlo.
+export interface GameOptions {
+  skin: SkinId;
+}
+
 export interface GameDefinition {
   width: number; // resolución interna del canvas
   height: number;
   controls: GameControl[];
   hud?: GameHud; // opcional: sin él, el HUD muestra todas las celdas
-  create(canvas: HTMLCanvasElement, callbacks: GameCallbacks): GameEngine;
+  skins?: readonly SkinId[]; // opcional: sin él, el Reproductor no muestra selector de skin
+  create(
+    canvas: HTMLCanvasElement,
+    callbacks: GameCallbacks,
+    options?: GameOptions,
+  ): GameEngine;
 }
