@@ -1,6 +1,6 @@
 # SPEC 10 — Skins de ASTEROIDS: clásico, neón y retro
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 05, SPEC 07
 > **Fecha:** 2026-09-30
 > **Objetivo:** Que ASTEROIDS tenga las skins Clásico (por defecto), Neón y Retro, elegibles desde la pantalla de inicio del Reproductor y recordadas por juego, legibles en modo oscuro y responsive.
