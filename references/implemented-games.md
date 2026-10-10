@@ -1,8 +1,8 @@
 # Juegos implementados
 
-Lista de los juegos de Arcade E1230 que ya tienen un motor real y se pueden jugar. Los datos del catálogo salen de la tabla `games` de Supabase (consultada el 2026-09-30) y el estado de implementación, del registro `lib/arcade/registry.ts`.
+Lista de los juegos de Arcade E1230 que ya tienen un motor real y se pueden jugar. Los datos del catálogo salen de la tabla `games` de Supabase (consultada el 2026-10-10) y el estado de implementación, del registro `lib/arcade/registry.ts`.
 
-Resumen: **4 juegos jugables** de los 8 que hay en el catálogo.
+Resumen: **5 juegos jugables** de los 8 que hay en el catálogo.
 
 | #   | ID          | Título    | Categoría | Acento   | Ruta                     | Motor                | Spec                        |
 | --- | ----------- | --------- | --------- | -------- | ------------------------ | -------------------- | --------------------------- |
@@ -10,8 +10,9 @@ Resumen: **4 juegos jugables** de los 8 que hay en el catálogo.
 | 2   | `tetris`    | TETRIS    | Puzles    | `yellow` | `/games/tetris/play`     | `lib/arcade/tetris/`    | `specs/07-tetris-game.md`   |
 | 3   | `snake`     | SNAKE     | Clásicos  | `pink`   | `/games/snake/play`      | `lib/arcade/snake/`     | `specs/09-snake-game.md`    |
 | 4   | `asteroids` | ASTEROIDS | Disparos  | `pink`   | `/games/asteroids/play`  | `lib/arcade/asteroids/` | `specs/05-asteroids-game.md` |
+| 5   | `frogger`   | FROGGER   | Clásicos  | `yellow` | `/games/frogger/play`    | `lib/arcade/frogger/`   | `specs/11-frogger-game.md`  |
 
-Los cuatro guardan su puntuación en el ranking global (tabla `scores` de Supabase).
+Los cinco guardan su puntuación en el ranking global (tabla `scores` de Supabase).
 
 ## ARKANOID
 
@@ -41,6 +42,13 @@ Los cuatro guardan su puntuación en el ranking global (tabla `scores` de Supaba
 - **Descripción larga:** Pilota una nave en un campo de asteroides y dispárales para partirlos en fragmentos cada vez más pequeños. Usa el hiperespacio para escapar en el último segundo y vigila los platillos enemigos.
 - **Implementación:** port a TypeScript de `references/started-games/02-asteroids/game.js`. Fue el primer juego real de la plataforma.
 
+## FROGGER
+
+- **ID:** `frogger` · **Categoría:** Clásicos · **Acento:** `yellow` · **Orden en el catálogo:** 7
+- **Descripción corta:** Cruza la carretera y el río sin convertirte en papilla.
+- **Descripción larga:** Guía a tu rana a través de una carretera repleta de coches y un río de troncos y tortugas que se sumergen. Llena las cinco bocas del otro lado para completar la ronda; cada nivel acelera el tráfico y acorta el tiempo. Tienes tres vidas y quince segundos por viaje.
+- **Implementación:** diseñado desde cero (sin referencia en `references/started-games/`; nació en la game jam y se promovió al SPEC 11), con grilla de 20×15 celdas de 40 px, saltos de una celda, 5 carriles de tráfico y 6 de río, tortugas que se sumergen, 5 bocas destino, 3 vidas y un temporizador de 15 s por viaje. Todo se dibuja con primitivas de canvas, sin imágenes ni sonido, así que no hay assets en `public/arcade/frogger/`. Todavía no tiene skins ni controles táctiles.
+
 ## Pendientes: en el catálogo pero sin motor
 
 Estos juegos existen en la tabla `games` y aparecen en la Biblioteca, pero su Reproductor sigue con la partida simulada.
@@ -49,5 +57,4 @@ Estos juegos existen en la tabla `games` y aparecen en la Biblioteca, pero su Re
 | --------- | -------------- | --------- | -------- | ----- |
 | `pacman`  | PAC-MAN        | Laberinto | `yellow` | 4     |
 | `invaders`| SPACE INVADERS | Disparos  | `cyan`   | 5     |
-| `frogger` | FROGGER        | Clásicos  | `yellow` | 7     |
 | `galaga`  | GALAGA         | Disparos  | `cyan`   | 8     |
