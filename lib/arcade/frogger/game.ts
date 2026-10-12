@@ -41,7 +41,9 @@ import {
   type Facing as Direction,
   type RenderState,
 } from "@/lib/arcade/frogger/render";
+import { SKINS } from "@/lib/arcade/frogger/skins";
 import { createKeyboard } from "@/lib/arcade/shared/keyboard";
+import { DEFAULT_SKIN } from "@/lib/arcade/shared/skins";
 
 type Phase = "playing" | "dying" | "gameover";
 
@@ -119,15 +121,15 @@ function createInitialState(): FroggerState {
   };
 }
 
-// El contrato pasa `options` (skins, SPEC 10), pero FROGGER todavía no tiene skins.
 export function createFroggerEngine(
   canvas: HTMLCanvasElement,
   callbacks: GameCallbacks,
   options?: GameOptions,
 ): GameEngine {
-  void options;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("No se pudo obtener el contexto 2D del canvas");
+  // La skin se fija al crear el motor y no cambia durante la partida.
+  const skin = SKINS[options?.skin ?? DEFAULT_SKIN];
 
   const keyboard = createKeyboard();
 
@@ -365,7 +367,7 @@ export function createFroggerEngine(
   }
 
   function draw(): void {
-    drawGame(ctx!, buildView());
+    drawGame(ctx!, buildView(), skin);
   }
 
   function loop(ts: number): void {

@@ -66,35 +66,6 @@ export function tripTime(level: number): number {
   return Math.max(TRIP_TIME_MIN, TRIP_TIME_BASE - TRIP_TIME_STEP * (level - 1));
 }
 
-// Colores del canvas, inspirados en el Frogger arcade.
-export const COLORS = {
-  road: "#000000", // carretera y fondo general
-  river: "#000047", // agua del río y de las bocas
-  safe: "#5b2a86", // mediana e inicio
-  hedge: "#1f8f1f", // seto de la fila de metas
-  hedgeDark: "#126312", // borde y textura del seto
-  timerBar: "#00e000", // barra de tiempo con más del 50 %
-  timerWarn: "#ffd800", // entre 25 % y 50 %
-  timerDanger: "#ff2020", // menos del 25 %
-  frog: "#3ee03e",
-  frogDark: "#1a7a1a",
-  eye: "#ffffff",
-  pupil: "#000000",
-  carYellow: "#ffd800", // fila 12
-  carPink: "#ff4fd8", // fila 10
-  racer: "#ffffff", // fila 9
-  tractor: "#30c0ff", // fila 11
-  truck: "#e0e0e0", // fila 8, caja
-  truckCab: "#ff3030", // fila 8, cabina
-  wheel: "#202020",
-  log: "#8b4a1c",
-  logLine: "#5a2e0e",
-  turtle: "#c0392b", // caparazón
-  turtleHead: "#2ecc40",
-  turtleSinking: "#5a1a1a", // grupo hundiéndose (todavía sostiene)
-  splat: "#ff2020", // marca de choque
-} as const;
-
 export type LaneKind =
   "car" | "racer" | "tractor" | "truck" | "log" | "turtles";
 
