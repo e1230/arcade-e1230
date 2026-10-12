@@ -37,7 +37,7 @@ La skin se elige en la pantalla de inicio del Reproductor y se recuerda por jueg
 | `[x]`  | `asteroids` | ASTEROIDS      | Blanco sobre negro | `COLORS` anterior | Fósforo verde | Medido en spec (2026-09-30) | Verificado a 320, 375, 768 y 1280 px (2026-09-30) | `specs/10-asteroids-skins.md` | 2026-09-30  |
 | `[/]`  | `pacman`    | PAC-MAN        | —       | —    | —     | —      | —          | —    | 2026-09-30  |
 | `[/]`  | `invaders`  | SPACE INVADERS | —       | —    | —     | —      | —          | —    | 2026-09-30  |
-| `[~]`  | `frogger`   | FROGGER        | Paleta del arcade, oscurecida | Tokens de la plataforma, vectorial con glow | `RETRO_8BIT`, búfer de 160×120 | Medido en spec (2026-10-12) | Pendiente | `specs/12-frogger-skins.md` (Borrador) | 2026-10-12  |
+| `[x]`  | `frogger`   | FROGGER        | Paleta del arcade, oscurecida | Tokens de la plataforma, vectorial con glow | `RETRO_8BIT`, búfer de 160×120 | Medido en spec (2026-10-12) | Verificado a 320, 375, 768 y 1280 px (2026-10-12) | `specs/12-frogger-skins.md` | 2026-10-12  |
 | `[/]`  | `galaga`    | GALAGA         | —       | —    | —     | —      | —          | —    | 2026-09-30  |
 
 ## Detalle
@@ -55,7 +55,7 @@ La skin se elige en la pantalla de inicio del Reproductor y se recuerda por jueg
 
 ### `frogger` — FROGGER
 
-- **Estado:** `[~]` En spec · **Spec:** `specs/12-frogger-skins.md` (Borrador)
+- **Estado:** `[x]` Implementado · **Spec:** `specs/12-frogger-skins.md`
 - **Clásico:** el `COLORS` del SPEC 11, que imita el Frogger arcade de Konami (1981): carretera negra, río azul oscuro, rana verde. Franjas moradas y seto oscurecidos para el modo oscuro (los colores originales pasan a bordes y cuadros). Sin glow.
 - **Neón:** vectorial nuevo con los tokens de la plataforma (rana `--neon-green`, coches cian, rosa, amarillo y bronce, tortugas moradas, fondo `--deep`) y glow `shadowBlur` 8. No reutiliza el `COLORS` actual, que no era neón.
 - **Retro:** paleta `RETRO_8BIT`, pixel art en un búfer de 160×120 ampliado 5× (celda de 8×8 píxeles lógicos). Las zonas del tablero se distinguen por patrón (rayas, ondas, cuadros, bordes), scanlines en CSS.
@@ -63,9 +63,11 @@ La skin se elige en la pantalla de inicio del Reproductor y se recuerda por jueg
 - **Historial:**
   - 2026-10-12 — Reconciliado: el motor ya existe (SPEC 11), pasa de `[/]` a `[ ]`.
   - 2026-10-12 — Spec de skins escrito (usa la base común del SPEC 10).
+  - 2026-10-12 — Implementado (SPEC 12). Verificado en modo oscuro a 1280 y 768 px en las tres skins (partida real: inicio, salto, barra en peligro y marca de choque; escenas fijas: rana sobre tronco, tortugas hundiéndose y sumergidas, bocas ocupadas). El búfer de Retro no tiene ningún píxel fuera de `RETRO_8BIT`. La pantalla de inicio no desborda a 320, 375, 768 y 1280 px.
 
 ## Historial de sesiones
 
+- 2026-10-12 — Implementación del SPEC 12: `frogger` pasa a `[x]`.
 - 2026-10-12 — «aplica skins a frogger» (modo aplicar): reconciliado el registro (`frogger` tenía motor pero figuraba `[/]`); escrito `specs/12-frogger-skins.md` en Borrador, sin base común (ya implementada); `frogger` pasa a `[~]`.
 - 2026-09-30 — Implementación del SPEC 10: la base común y `asteroids` pasan a `[x]`.
 - 2026-09-30 — «skins para asteroids» (modo aplicar): escrito `specs/10-asteroids-skins.md` en Borrador, con la base común; el registro pasa la base y `asteroids` a `[~]`.
