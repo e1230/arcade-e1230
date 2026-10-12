@@ -1,6 +1,8 @@
 // Constantes de jugabilidad de FROGGER. No hay referencia que portar: son los valores acordados en el SPEC 11.
 // Los tiempos van en segundos y las velocidades en px/s.
 
+import type { VehicleColorRole } from "@/lib/arcade/frogger/skins";
+
 export const WIDTH = 800;
 export const HEIGHT = 600;
 
@@ -104,7 +106,7 @@ export interface LaneConfig {
   speed: number; // px/s en el nivel 1
   dir: 1 | -1; // 1 derecha, -1 izquierda
   offset: number; // px de desfase de la primera entidad
-  color?: string; // solo vehículos
+  colorRole?: VehicleColorRole; // solo vehículos: el color lo resuelve la skin
   turtlePhase?: number; // solo tortugas: s de desfase del ciclo de inmersión (el grupo 0 se sumerge)
 }
 
@@ -143,7 +145,7 @@ export const LANES: readonly LaneConfig[] = [
     speed: 70,
     dir: -1,
     offset: 40,
-    color: COLORS.truck,
+    colorRole: "truck",
   },
   {
     row: 9,
@@ -153,7 +155,7 @@ export const LANES: readonly LaneConfig[] = [
     speed: 150,
     dir: 1,
     offset: 200,
-    color: COLORS.racer,
+    colorRole: "racer",
   },
   {
     row: 10,
@@ -163,7 +165,7 @@ export const LANES: readonly LaneConfig[] = [
     speed: 80,
     dir: -1,
     offset: 60,
-    color: COLORS.carPink,
+    colorRole: "carPink",
   },
   {
     row: 11,
@@ -173,7 +175,7 @@ export const LANES: readonly LaneConfig[] = [
     speed: 50,
     dir: 1,
     offset: 120,
-    color: COLORS.tractor,
+    colorRole: "tractor",
   },
   {
     row: 12,
@@ -183,6 +185,6 @@ export const LANES: readonly LaneConfig[] = [
     speed: 60,
     dir: -1,
     offset: 0,
-    color: COLORS.carYellow,
+    colorRole: "carYellow",
   },
 ];

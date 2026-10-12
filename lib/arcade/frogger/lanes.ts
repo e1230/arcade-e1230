@@ -14,6 +14,7 @@ import {
   speedFactor,
   type LaneKind,
 } from "@/lib/arcade/frogger/constants";
+import type { VehicleColorRole } from "@/lib/arcade/frogger/skins";
 
 export interface Entity {
   x: number; // px del borde izquierdo, entre −LANE_EXTRA y WIDTH + LANE_EXTRA
@@ -25,7 +26,7 @@ export interface Lane {
   kind: LaneKind;
   length: number; // celdas de cada entidad
   velocity: number; // px/s con signo, ya multiplicada por speedFactor(level)
-  color: string; // solo vehículos; vacío en troncos y tortugas
+  colorRole: VehicleColorRole | null; // solo vehículos; null en troncos y tortugas
   turtlePhase: number; // s de desfase del ciclo de inmersión
   entities: Entity[];
 }
@@ -52,7 +53,7 @@ export function buildLanes(level: number): Lane[] {
       kind: config.kind,
       length: config.length,
       velocity: config.dir * config.speed * factor,
-      color: config.color ?? "",
+      colorRole: config.colorRole ?? null,
       turtlePhase: config.turtlePhase ?? 0,
       entities,
     };
