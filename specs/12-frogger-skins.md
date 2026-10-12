@@ -1,6 +1,6 @@
 # SPEC 12 — Skins de FROGGER: clásico, neón y retro
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC 05, SPEC 07, SPEC 10, SPEC 11
 > **Fecha:** 2026-10-12
 > **Objetivo:** Que FROGGER tenga las skins Clásico (por defecto), Neón y Retro, elegibles desde la pantalla de inicio del Reproductor y recordadas por juego, legibles en modo oscuro y responsive.
