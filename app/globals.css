@@ -107,6 +107,7 @@
   --animate-pulse-cyan: e-pulse-cyan 1.6s ease-in-out infinite;
   --animate-shake: e-shake 0.4s ease-in-out 1;
   --animate-pxblink: e-pxblink 2.4s steps(2) infinite;
+  --animate-pulse-led: e-pulse-led 2s ease-in-out infinite;
 }
 
 /* Estilos base copiados de la referencia */
@@ -375,6 +376,14 @@ textarea::placeholder {
 @keyframes e-pxblink {
   50% {
     opacity: 0.2;
+  }
+}
+
+/* Pulso del LED en rombo del centro del D-pad del gamepad táctil */
+@keyframes e-pulse-led {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.85);
   }
 }
 

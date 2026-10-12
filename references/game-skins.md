@@ -2,7 +2,7 @@
 
 Registro de qué juegos de Arcade E1230 tienen las tres skins obligatorias: **Clásico** (por defecto), **Neón** y **Retro**. Lo mantiene el subagente `skin-designer` (`.claude/agents/skin-designer.md`), que lo lee antes de trabajar y lo actualiza después. Se puede editar a mano.
 
-Última actualización: 2026-09-30
+Última actualización: 2026-10-12
 
 Estados: `[ ]` Sin skins · `[~]` En spec · `[x]` Implementado · `[/]` Sin motor (no aplica todavía)
 
@@ -37,7 +37,7 @@ La skin se elige en la pantalla de inicio del Reproductor y se recuerda por jueg
 | `[x]`  | `asteroids` | ASTEROIDS      | Blanco sobre negro | `COLORS` anterior | Fósforo verde | Medido en spec (2026-09-30) | Verificado a 320, 375, 768 y 1280 px (2026-09-30) | `specs/10-asteroids-skins.md` | 2026-09-30  |
 | `[/]`  | `pacman`    | PAC-MAN        | —       | —    | —     | —      | —          | —    | 2026-09-30  |
 | `[/]`  | `invaders`  | SPACE INVADERS | —       | —    | —     | —      | —          | —    | 2026-09-30  |
-| `[/]`  | `frogger`   | FROGGER        | —       | —    | —     | —      | —          | —    | 2026-09-30  |
+| `[~]`  | `frogger`   | FROGGER        | Paleta del arcade, oscurecida | Tokens de la plataforma, vectorial con glow | `RETRO_8BIT`, búfer de 160×120 | Medido en spec (2026-10-12) | Pendiente | `specs/12-frogger-skins.md` (Borrador) | 2026-10-12  |
 | `[/]`  | `galaga`    | GALAGA         | —       | —    | —     | —      | —          | —    | 2026-09-30  |
 
 ## Detalle
@@ -53,7 +53,19 @@ La skin se elige en la pantalla de inicio del Reproductor y se recuerda por jueg
   - 2026-09-30 — Spec de skins escrito (con la base común).
   - 2026-09-30 — Implementado (SPEC 10). Verificado a 1280 y 768 px en las tres skins; el selector de `StartScreen` cabe a 320 px (hubo que ocultar «PRESIONA ESPACIO» y bajar el gap en anchos pequeños).
 
+### `frogger` — FROGGER
+
+- **Estado:** `[~]` En spec · **Spec:** `specs/12-frogger-skins.md` (Borrador)
+- **Clásico:** el `COLORS` del SPEC 11, que imita el Frogger arcade de Konami (1981): carretera negra, río azul oscuro, rana verde. Franjas moradas y seto oscurecidos para el modo oscuro (los colores originales pasan a bordes y cuadros). Sin glow.
+- **Neón:** vectorial nuevo con los tokens de la plataforma (rana `--neon-green`, coches cian, rosa, amarillo y bronce, tortugas moradas, fondo `--deep`) y glow `shadowBlur` 8. No reutiliza el `COLORS` actual, que no era neón.
+- **Retro:** paleta `RETRO_8BIT`, pixel art en un búfer de 160×120 ampliado 5× (celda de 8×8 píxeles lógicos). Las zonas del tablero se distinguen por patrón (rayas, ondas, cuadros, bordes), scanlines en CSS.
+- **Contraste mínimo:** Clásico 3,09:1 (rana sobre caparazón; contra el fondo, 3,20:1 el tronco sobre el río) · Neón 3,05:1 (borde de las bocas sobre el seto; rana sobre soporte, 3,14:1) · Retro 4,69:1 contra el fondo (distinción más baja entre entidades: rana / caparazón 2,27:1)
+- **Historial:**
+  - 2026-10-12 — Reconciliado: el motor ya existe (SPEC 11), pasa de `[/]` a `[ ]`.
+  - 2026-10-12 — Spec de skins escrito (usa la base común del SPEC 10).
+
 ## Historial de sesiones
 
+- 2026-10-12 — «aplica skins a frogger» (modo aplicar): reconciliado el registro (`frogger` tenía motor pero figuraba `[/]`); escrito `specs/12-frogger-skins.md` en Borrador, sin base común (ya implementada); `frogger` pasa a `[~]`.
 - 2026-09-30 — Implementación del SPEC 10: la base común y `asteroids` pasan a `[x]`.
 - 2026-09-30 — «skins para asteroids» (modo aplicar): escrito `specs/10-asteroids-skins.md` en Borrador, con la base común; el registro pasa la base y `asteroids` a `[~]`.

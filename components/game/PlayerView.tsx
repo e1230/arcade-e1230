@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CrtScreen } from "@/components/game/CrtScreen";
 import { GameCanvas } from "@/components/game/GameCanvas";
 import { GameOverModal } from "@/components/game/GameOverModal";
+import { MobileGamepad } from "@/components/game/MobileGamepad";
 import { PlayerHud } from "@/components/game/PlayerHud";
 import { StartScreen } from "@/components/game/StartScreen";
 import { NeonButton } from "@/components/ui/NeonButton";
@@ -14,6 +15,7 @@ import { ACCENTS, type Game } from "@/lib/games";
 import { insertScore } from "@/lib/leaderboard-client";
 import { getPlayerName, useSession } from "@/lib/session";
 import { STORAGE_KEYS, useStoredValue, writeStoredValue } from "@/lib/storage";
+import { useIsCoarsePointer } from "@/lib/use-coarse-pointer";
 
 type PlayerStatus = "loading" | "ready" | "simulating" | "playing" | "over";
 type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -55,6 +57,7 @@ interface PlayerViewProps {
 export function PlayerView({ game }: PlayerViewProps) {
   const [state, setState] = useState<PlayerState>(INITIAL_STATE);
   const { user } = useSession();
+  const isCoarsePointer = useIsCoarsePointer();
 
   const loadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const simInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -290,6 +293,7 @@ export function PlayerView({ game }: PlayerViewProps) {
               skin={skin}
               onSkinChange={handleSkinChange}
               onStart={handleStart}
+              touchReady={!!definition.touch}
             />
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4.5 [background-image:repeating-linear-gradient(135deg,rgba(0,245,255,.05)_0_10px,transparent_10px_20px)] bg-repeat p-6 text-center">
@@ -325,6 +329,10 @@ export function PlayerView({ game }: PlayerViewProps) {
             />
           )}
       </CrtScreen>
+
+      {isCoarsePointer && definition?.touch && state.status === "playing" && (
+        <MobileGamepad controls={definition.touch} disabled={state.paused} />
+      )}
 
       {state.status === "over" && (
         <GameOverModal
