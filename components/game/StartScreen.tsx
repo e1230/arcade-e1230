@@ -1,9 +1,9 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import { NeonButton } from "@/components/ui/NeonButton";
 import type { GameControl, SkinId } from "@/lib/arcade/engine";
 import { SKIN_LABELS } from "@/lib/arcade/shared/skins";
+import { useIsCoarsePointer } from "@/lib/use-coarse-pointer";
 
 interface StartScreenProps {
   title: string;
@@ -12,28 +12,7 @@ interface StartScreenProps {
   skin: SkinId;
   onSkinChange: (skin: SkinId) => void;
   onStart: () => void;
-}
-
-function subscribeCoarsePointer(callback: () => void) {
-  const query = window.matchMedia("(pointer: coarse)");
-  query.addEventListener("change", callback);
-  return () => query.removeEventListener("change", callback);
-}
-
-function getCoarsePointerSnapshot() {
-  return window.matchMedia("(pointer: coarse)").matches;
-}
-
-function getCoarsePointerServerSnapshot() {
-  return false;
-}
-
-function useIsCoarsePointer() {
-  return useSyncExternalStore(
-    subscribeCoarsePointer,
-    getCoarsePointerSnapshot,
-    getCoarsePointerServerSnapshot,
-  );
+  touchReady: boolean; // el juego declara gamepad táctil
 }
 
 export function StartScreen({
@@ -43,6 +22,7 @@ export function StartScreen({
   skin,
   onSkinChange,
   onStart,
+  touchReady,
 }: StartScreenProps) {
   const isCoarsePointer = useIsCoarsePointer();
 
@@ -91,15 +71,17 @@ export function StartScreen({
         </div>
       )}
 
-      {isCoarsePointer ? (
+      {isCoarsePointer && !touchReady ? (
         <span className="font-pixel text-xs text-pink [text-shadow:var(--text-shadow-glow-pink)]">
           ESTE JUEGO NECESITA TECLADO
         </span>
       ) : (
         <>
-          <span className="hidden font-pixel text-xs text-yellow motion-safe:animate-blink sm:block">
-            PRESIONA ESPACIO
-          </span>
+          {!isCoarsePointer && (
+            <span className="hidden font-pixel text-xs text-yellow motion-safe:animate-blink sm:block">
+              PRESIONA ESPACIO
+            </span>
+          )}
           <NeonButton
             variant="outline"
             accent="yellow"

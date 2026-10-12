@@ -9,5 +9,12 @@ export const froggerDefinition: GameDefinition = {
     { keys: "← ↑ ↓ → / W A S D", action: "SALTAR" },
     { keys: "P", action: "PAUSA" },
   ],
+  // El motor solo lee saltos en cuatro direcciones: no hay botones A/B.
+  touch: {
+    up: "ArrowUp",
+    down: "ArrowDown",
+    left: "ArrowLeft",
+    right: "ArrowRight",
+  },
   create: createFroggerEngine,
 };

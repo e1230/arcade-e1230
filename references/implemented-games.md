@@ -47,7 +47,8 @@ Los cinco guardan su puntuación en el ranking global (tabla `scores` de Supabas
 - **ID:** `frogger` · **Categoría:** Clásicos · **Acento:** `yellow` · **Orden en el catálogo:** 7
 - **Descripción corta:** Cruza la carretera y el río sin convertirte en papilla.
 - **Descripción larga:** Guía a tu rana a través de una carretera repleta de coches y un río de troncos y tortugas que se sumergen. Llena las cinco bocas del otro lado para completar la ronda; cada nivel acelera el tráfico y acorta el tiempo. Tienes tres vidas y quince segundos por viaje.
-- **Implementación:** diseñado desde cero (sin referencia en `references/started-games/`; nació en la game jam y se promovió al SPEC 11), con grilla de 20×15 celdas de 40 px, saltos de una celda, 5 carriles de tráfico y 6 de río, tortugas que se sumergen, 5 bocas destino, 3 vidas y un temporizador de 15 s por viaje. Todo se dibuja con primitivas de canvas, sin imágenes ni sonido, así que no hay assets en `public/arcade/frogger/`. Todavía no tiene skins ni controles táctiles.
+- **Implementación:** diseñado desde cero (sin referencia en `references/started-games/`; nació en la game jam y se promovió al SPEC 11), con grilla de 20×15 celdas de 40 px, saltos de una celda, 5 carriles de tráfico y 6 de río, tortugas que se sumergen, 5 bocas destino, 3 vidas y un temporizador de 15 s por viaje. Todo se dibuja con primitivas de canvas, sin imágenes ni sonido, así que no hay assets en `public/arcade/frogger/`. Todavía no tiene skins.
+- **Táctil:** ↑ ArrowUp · ↓ ArrowDown · ← ArrowLeft · → ArrowRight
 
 ## Pendientes: en el catálogo pero sin motor
 

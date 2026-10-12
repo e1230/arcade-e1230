@@ -31,12 +31,19 @@ export interface GameOptions {
   skin: SkinId;
 }
 
+// Botones del gamepad táctil.
+export type TouchButton = "up" | "down" | "left" | "right" | "a" | "b";
+
+// Mapeo de cada botón táctil al `KeyboardEvent.code` que lee el motor.
+export type GameTouchControls = Partial<Record<TouchButton, string>>;
+
 export interface GameDefinition {
   width: number; // resolución interna del canvas
   height: number;
   controls: GameControl[];
   hud?: GameHud; // opcional: sin él, el HUD muestra todas las celdas
   skins?: readonly SkinId[]; // opcional: sin él, el Reproductor no muestra selector de skin
+  touch?: GameTouchControls; // sin él, el juego pide teclado en pantallas táctiles
   create(
     canvas: HTMLCanvasElement,
     callbacks: GameCallbacks,
