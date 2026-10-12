@@ -13,6 +13,7 @@ import {
   GOAL_COLS,
   GOAL_ROW,
   GOAL_SPAN,
+  HEIGHT,
   HOP_TIME,
   INITIAL_LIVES,
   MAX_DT,
@@ -41,7 +42,10 @@ import {
   type Facing as Direction,
   type RenderState,
 } from "@/lib/arcade/frogger/render";
+import { drawGamePixels } from "@/lib/arcade/frogger/render-pixel";
+import { SKINS } from "@/lib/arcade/frogger/skins";
 import { createKeyboard } from "@/lib/arcade/shared/keyboard";
+import { DEFAULT_SKIN } from "@/lib/arcade/shared/skins";
 
 type Phase = "playing" | "dying" | "gameover";
 
@@ -119,15 +123,28 @@ function createInitialState(): FroggerState {
   };
 }
 
-// El contrato pasa `options` (skins, SPEC 10), pero FROGGER todavía no tiene skins.
 export function createFroggerEngine(
   canvas: HTMLCanvasElement,
   callbacks: GameCallbacks,
   options?: GameOptions,
 ): GameEngine {
-  void options;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("No se pudo obtener el contexto 2D del canvas");
+  // La skin se fija al crear el motor y no cambia durante la partida.
+  const skin = SKINS[options?.skin ?? DEFAULT_SKIN];
+
+  // Retro dibuja la escena en un búfer reducido y la amplía sin suavizado; el canvas visible conserva su tamaño.
+  let buffer: HTMLCanvasElement | null = null;
+  let bufferCtx: CanvasRenderingContext2D | null = null;
+  if (skin.pixelScale > 1) {
+    buffer = document.createElement("canvas");
+    buffer.width = WIDTH / skin.pixelScale;
+    buffer.height = HEIGHT / skin.pixelScale;
+    bufferCtx = buffer.getContext("2d");
+    if (!bufferCtx) {
+      throw new Error("No se pudo obtener el contexto 2D del búfer");
+    }
+  }
 
   const keyboard = createKeyboard();
 
@@ -365,7 +382,13 @@ export function createFroggerEngine(
   }
 
   function draw(): void {
-    drawGame(ctx!, buildView());
+    if (buffer && bufferCtx) {
+      drawGamePixels(bufferCtx, buildView(), skin);
+      ctx!.imageSmoothingEnabled = false;
+      ctx!.drawImage(buffer, 0, 0, WIDTH, HEIGHT);
+      return;
+    }
+    drawGame(ctx!, buildView(), skin);
   }
 
   function loop(ts: number): void {

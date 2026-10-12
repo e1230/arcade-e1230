@@ -1,6 +1,6 @@
 # SPEC 11 — FROGGER jugable en el Reproductor
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 05, SPEC 06, SPEC 09, SPEC 10
 > **Fecha:** 2026-10-10
 > **Objetivo:** Crear un FROGGER jugable en `/games/frogger/play`, con carretera, río, tortugas que se sumergen y cinco bocas destino, dibujado con primitivas de canvas y con su puntuación en el ranking global.
