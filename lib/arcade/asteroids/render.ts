@@ -64,10 +64,16 @@ export function fillPixels(
 
 // Dibuja un contorno en coordenadas locales (origen + rotación). Vectorial (pixelScale 1):
 // translate, rotate y stroke. Pixel art (pixelScale > 1): rota los puntos a mano y los traza con plotLine.
+// Arreglos de trabajo de la grilla lógica de Retro: se reescriben en cada trazo y se leen en el mismo
+const gridX: number[] = [];
+const gridY: number[] = [];
+
 export function strokeShape(
   ctx: CanvasRenderingContext2D,
   skin: AsteroidsSkin,
-  origin: { x: number; y: number; rotation: number },
+  x: number,
+  y: number,
+  rotation: number,
   points: readonly (readonly [number, number])[],
   color: string,
   closed: boolean,
@@ -76,8 +82,8 @@ export function strokeShape(
 
   if (skin.pixelScale <= 1) {
     ctx.save();
-    ctx.translate(origin.x, origin.y);
-    ctx.rotate(origin.rotation);
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
     ctx.strokeStyle = color;
     ctx.lineWidth = skin.lineWidth;
     ctx.lineJoin = "round";
@@ -92,25 +98,18 @@ export function strokeShape(
   }
 
   // Toda coordenada del mundo (800×600) pasa a la grilla lógica con floor, para alinear a enteros.
-  const cos = Math.cos(origin.rotation);
-  const sin = Math.sin(origin.rotation);
-  const grid = points.map(([px, py]) => [
-    Math.floor((origin.x + px * cos - py * sin) / skin.pixelScale),
-    Math.floor((origin.y + px * sin + py * cos) / skin.pixelScale),
-  ]);
-  for (let i = 1; i < grid.length; i++)
-    plotLine(
-      ctx,
-      grid[i - 1][0],
-      grid[i - 1][1],
-      grid[i][0],
-      grid[i][1],
-      color,
-    );
-  if (closed && grid.length > 2) {
-    const last = grid[grid.length - 1];
-    plotLine(ctx, last[0], last[1], grid[0][0], grid[0][1], color);
+  const cos = Math.cos(rotation);
+  const sin = Math.sin(rotation);
+  const n = points.length;
+  for (let i = 0; i < n; i++) {
+    const p = points[i];
+    gridX[i] = Math.floor((x + p[0] * cos - p[1] * sin) / skin.pixelScale);
+    gridY[i] = Math.floor((y + p[0] * sin + p[1] * cos) / skin.pixelScale);
   }
+  for (let i = 1; i < n; i++)
+    plotLine(ctx, gridX[i - 1], gridY[i - 1], gridX[i], gridY[i], color);
+  if (closed && n > 2)
+    plotLine(ctx, gridX[n - 1], gridY[n - 1], gridX[0], gridY[0], color);
 }
 
 // "#ff006e", 0.5 → "rgba(255, 0, 110, 0.50)"

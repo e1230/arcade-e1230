@@ -29,6 +29,29 @@ import {
 } from "@/lib/arcade/asteroids/render";
 import type { AsteroidsSkin } from "@/lib/arcade/asteroids/skins";
 
+// Casco de la nave: no cambia entre frames
+const SHIP_HULL: readonly (readonly [number, number])[] = [
+  [20, 0],
+  [-12, -9],
+  [-7, 0],
+  [-12, 9],
+];
+
+// Llama del propulsor: solo el largo (índice 1) cambia en cada frame, y se consume en el mismo draw
+const FLAME_POINTS: [number, number][] = [
+  [-8, -4],
+  [-8, 0],
+  [-8, 4],
+];
+
+// Rombo del power-up: su lado cambia con el pulso, así que son cuatro vértices de trabajo que se reescriben en cada draw
+const DIAMOND_POINTS: [number, number][] = [
+  [0, 0],
+  [0, 0],
+  [0, 0],
+  [0, 0],
+];
+
 export class Bullet {
   x: number;
   y: number;
@@ -125,7 +148,9 @@ export class Asteroid {
     strokeShape(
       ctx,
       skin,
-      { x: this.x, y: this.y, rotation: this.rot },
+      this.x,
+      this.y,
+      this.rot,
       this.verts,
       skin.asteroid,
       true,
@@ -170,16 +195,21 @@ export class PowerUp {
     const r = this.radius * pulse;
     if (skin.pixelScale > 1) {
       // Rombo: el cuadrado de lado 2r girado 45°
+      DIAMOND_POINTS[0][0] = -r;
+      DIAMOND_POINTS[0][1] = -r;
+      DIAMOND_POINTS[1][0] = r;
+      DIAMOND_POINTS[1][1] = -r;
+      DIAMOND_POINTS[2][0] = r;
+      DIAMOND_POINTS[2][1] = r;
+      DIAMOND_POINTS[3][0] = -r;
+      DIAMOND_POINTS[3][1] = r;
       strokeShape(
         ctx,
         skin,
-        { x: this.x, y: this.y, rotation: Math.PI / 4 },
-        [
-          [-r, -r],
-          [r, -r],
-          [r, r],
-          [-r, r],
-        ],
+        this.x,
+        this.y,
+        Math.PI / 4,
+        DIAMOND_POINTS,
         skin.powerUp,
         true,
       );
@@ -324,34 +354,29 @@ export class Ship {
     if (this.invincible > 0 && Math.floor(this.invincible * 8) % 2 === 0)
       return;
 
-    const origin = { x: this.x, y: this.y, rotation: this.angle };
     // El glow (solo Neón) envuelve casco y llama con el color de la nave
     applyGlow(ctx, skin, skin.ship);
     strokeShape(
       ctx,
       skin,
-      origin,
-      [
-        [20, 0],
-        [-12, -9],
-        [-7, 0],
-        [-12, 9],
-      ],
+      this.x,
+      this.y,
+      this.angle,
+      SHIP_HULL,
       skin.ship,
       true,
     );
 
     if (this.thrusting && Math.random() > 0.35) {
       ctx.globalAlpha = skin.flameAlpha;
+      FLAME_POINTS[1][0] = -8 - rand(6, 14);
       strokeShape(
         ctx,
         skin,
-        origin,
-        [
-          [-8, -4],
-          [-8 - rand(6, 14), 0],
-          [-8, 4],
-        ],
+        this.x,
+        this.y,
+        this.angle,
+        FLAME_POINTS,
         skin.flame,
         false,
       );
