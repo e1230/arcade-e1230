@@ -2,7 +2,7 @@
 
 Registro de la revisión de rendimiento de cada juego con motor de Arcade E1230. Lo mantiene el subagente `game-performance-booster` (`.claude/agents/game-performance-booster.md`), que lo lee antes de trabajar y lo actualiza después. Se puede editar a mano.
 
-Última actualización: 2026-10-12
+Última actualización: 2026-10-19
 
 Estados: `[ ]` Sin revisar · `[!]` Con problemas · `[~]` En spec · `[x]` Optimizado · `[=]` Revisado, cumple sin cambios · `[/]` Sin motor
 
@@ -47,19 +47,21 @@ Lo aprendido al medir (2026-10-12, equipo del autor, Chromium con Playwright, `n
 | `[/]`  | `pacman`    | PAC-MAN        | —           | —        | —         | —               | —                                   | —          |
 | `[/]`  | `invaders`  | SPACE INVADERS | —           | —        | —         | —               | —                                   | —          |
 | `[~]`  | `asteroids` | ASTEROIDS      | 17,4 ms     | 17,5 ms  | 17,6 ms   | 19 (Neón; 11,46 de media) | `specs/17-asteroids-performance.md` (Borrador) | 2026-10-12 |
-| `[~]`  | `frogger`   | FROGGER        | 17,6 ms     | 17,6 ms  | 17,6 ms   | 94,4 (Neón)     | `specs/13-frogger-performance.md` (Borrador) | 2026-10-12 |
+| `[~]`  | `frogger`   | FROGGER        | 17,6 ms     | 17,4 ms  | 17,6 ms   | 6,32 (Neón; antes 94,4) | `specs/13-frogger-performance.md` (Aprobado; implementado, falta medir Clásico y Retro) | 2026-10-19 |
 | `[/]`  | `galaga`    | GALAGA         | —           | —        | —         | —               | —                                   | —          |
 
 ## Detalle
 
 ### `frogger` — FROGGER
 
-- **Estado:** `[~]` En spec · **Spec:** `specs/13-frogger-performance.md` (Borrador)
+- **Estado:** `[~]` Implementado, medición final incompleta (pasa a `[x]` al medir Clásico y Retro) · **Spec:** `specs/13-frogger-performance.md` (Aprobado)
+- **Medición final (2026-10-19, dev, 1280 × 900):** solo **Neón** medido tras los pasos 1 a 3 · Normal (8 s): p95 17,4 ms, 0 % > 33 ms, glow 6,32/frame (antes 94,4), 103,66 dibujos/frame (antes 204,9), 0,13 mutaciones/s, setLineDash, gradientes e `imageData` en 0, heap +0,92 MB · CPU ×4 (8 s): p95 17,6 ms, 0 % > 33 ms, glow 6,32, 103,69 dibujos/frame · Pausa (2 s): 0 dibujos/frame · Fin de partida (2 s, modal abierto): 0 dibujos/frame (antes Clásico 194,6 y Retro 1469,9; Neón no medido) · P pulsada con el modal abierto: 0 dibujos y el modal sigue · JUGAR DE NUEVO: partida limpia (0 puntos, 3 vidas, nivel 1) con un solo loop (104,15 dibujos/frame con la rana viva, no ≈ 208; glow 7,04) · Teclado: ArrowLeft + KeyA dan un solo salto, y el salto guardado durante el vuelo se ejecuta · Captura `.playwright-screenshots/performance/frogger/neon-after.png` sin recortes del blur y con las tortugas hundiéndose bien. **Pendiente de medir:** Clásico y Retro (el paso 4, capa de terreno, está implementado pero sin medición: esperado ≤ 720 dibujos/frame y JS del loop < 0,415 ms en Retro), cambio de ronda, anchos 320/375/768/1280 px y heap a 60 s. El MCP de Playwright se colgó al medir Retro (script largo con CPU ×4 y espera del fin de partida); medir en llamadas cortas.
 - **Medición inicial (2026-10-12, dev):** Clásico p95 17,6 ms, 206,5 dibujos/frame · Neón p95 17,6 ms, glow 94,4/frame, 204,9 dibujos/frame · Retro p95 17,6 ms, 1444,7 dibujos/frame · CPU ×4 p95 máx. 17,6 ms (el throttle no tuvo efecto medible) · Pausa: 0 dibujos/frame en las tres skins · Fin de partida: Clásico 194,6 y Retro 1469,9 dibujos/frame (Neón no medido) · Mutaciones del DOM 0/s · Heap sin crecimiento en ventanas de 8 s · JS del loop: Clásico 0,053 ms, Neón 0,079 ms, Retro 0,415 ms
 - **Hallazgos:** (Alta) el loop sigue dibujando tras `onGameOver` (`game.ts:394-400`, `427-434`); (Alta) Neón dibuja 94,4 veces por frame con glow (`render.ts:143-385`, entidades con `applyGlow` por entidad) -> caché de sprites; (Media) Retro redibuja el terreno estático cada frame, ≈ 751 de 1444,7 `fillRect` (`render-pixel.ts:202-258`, `335`) -> capa de terreno
 - **Pendientes bajos:** entran en el mismo spec (arreglos y closures por frame en `render.ts`/`render-pixel.ts`, `readInput` con `map/some`, `buildView` por frame, `imageSmoothingEnabled` por frame, `state.clock` sin acotar). Descartados: caché del fondo de Clásico/Neón, caché de entidades de Retro, índices por fila en `lanes.ts`
 - **Historial:**
   - 2026-10-12 — Revisión de rendimiento: medidas las tres skins con `npm run dev`; escrito `specs/13-frogger-performance.md` en Borrador.
+  - 2026-10-19 — Implementado el SPEC 13 (pasos 1 a 4): el loop termina en `gameover`, higiene de asignaciones, caché de sprites con glow en Neón y capa de terreno en Retro. Medido solo Neón (glow 94,4 → 6,32, dibujos 204,9 → 103,7, fin de partida en 0); Clásico y Retro pendientes de medir.
 
 ### `arkanoid` — ARKANOID
 
@@ -109,3 +111,4 @@ En el catálogo pero sin motor (`lib/arcade/registry.ts` no los registra). Cuand
 - 2026-10-12 — Revisión de `tetris`: medida su única pasada (sin skins) con `npm run dev`; el loop dibuja 178,48 veces por frame (16,13 con glow) tras el fin de partida y la pieza activa llega a 16 dibujos con `shadowBlur` con la tuerca (presupuesto ≤ 10); escrito `specs/15-tetris-performance.md` en Borrador; `tetris` pasa a `[~]`.
 - 2026-10-12 — Revisión de `snake`: medida su única pasada (sin skins) con `npm run dev`; el loop dibuja 62 veces por frame (1 con glow) tras el fin de partida (presupuesto 0), el resto cumple (glow 1/frame, p95 17,5 ms, heap plano); escrito `specs/16-snake-performance.md` en Borrador; `snake` pasa a `[~]`.
 - 2026-10-12 — Revisión de `asteroids`: medidas las tres skins (Clásico, Neón y Retro) con `npm run dev`; el loop dibuja 13 veces por frame (12 con glow) en Neón y 27 en Retro tras el fin de partida (presupuesto 0) y Neón llega a 19 dibujos con `shadowBlur` por frame (presupuesto ≤ 10), el resto cumple (p95 17,4 a 17,6 ms, heap plano, pausa en 0); escrito `specs/17-asteroids-performance.md` en Borrador; `asteroids` pasa a `[~]`. Los cinco juegos con motor quedan revisados y en `[~]`.
+- 2026-10-19 — `frogger`: implementado el SPEC 13 y medido Neón (glow 94,4 → 6,32 por frame, dibujos 204,9 → 103,7, 0 dibujos en pausa y en fin de partida, un solo loop tras JUGAR DE NUEVO). Clásico y Retro sin medir (el MCP de Playwright se colgó), así que `frogger` sigue en `[~]` hasta completar la medición.
