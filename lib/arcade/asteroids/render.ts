@@ -3,6 +3,104 @@
 
 import type { AsteroidsSkin } from "@/lib/arcade/asteroids/skins";
 
+// Pasos de alfa de las partículas: `hexToRgba` redondea el alfa a dos decimales, así que solo hay 101 colores posibles
+export const ALPHA_STEPS = 100;
+
+export interface RenderCache {
+  // "rgba(r, g, b, a)" para a = 0, 0.01 … 1, con el color de partícula de la skin
+  particleStyles: readonly string[];
+  // Bala con glow ya horneado (solo Neón); null en Clásico y Retro
+  bulletSprite: HTMLCanvasElement | null;
+  // Mitad del lado del sprite de la bala, en px: el centro del círculo cae en (bulletHalf, bulletHalf)
+  bulletHalf: number;
+}
+
+// Margen de los sprites con glow: 3 σ del desenfoque (σ = shadowBlur / 2) más el trazo.
+// Con glow 8 y lineWidth 2 son 18 px, para que el blur no se recorte.
+export function glowPad(skin: AsteroidsSkin): number {
+  return Math.ceil(skin.glow * 2) + skin.lineWidth;
+}
+
+function createCanvas(
+  size: number,
+): [HTMLCanvasElement, CanvasRenderingContext2D] {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const g = canvas.getContext("2d");
+  if (!g) throw new Error("No se pudo obtener el contexto 2d del sprite");
+  return [canvas, g];
+}
+
+// Bala: círculo de radio 2 con glow horneado, con el centro en (half, half)
+function createBulletSprite(
+  skin: AsteroidsSkin,
+  radius: number,
+): [HTMLCanvasElement, number] {
+  const half = radius + glowPad(skin);
+  const [sprite, g] = createCanvas(half * 2);
+  applyGlow(g, skin, skin.bullet);
+  g.fillStyle = skin.bullet;
+  g.beginPath();
+  g.arc(half, half, radius, 0, Math.PI * 2);
+  g.fill();
+  return [sprite, half];
+}
+
+// Se construye una vez en `create`: la skin no cambia durante la partida
+export function createRenderCache(skin: AsteroidsSkin): RenderCache {
+  const particleStyles: string[] = [];
+  for (let i = 0; i <= ALPHA_STEPS; i++)
+    particleStyles.push(hexToRgba(skin.particle, i / ALPHA_STEPS));
+  if (skin.glow > 0) {
+    const [bulletSprite, bulletHalf] = createBulletSprite(skin, 2);
+    return { particleStyles, bulletSprite, bulletHalf };
+  }
+  return { particleStyles, bulletSprite: null, bulletHalf: 0 };
+}
+
+// Solo el halo del glow de un contorno cerrado, sin el trazo, para dibujar el trazo nítido en vivo encima.
+// El contorno se dibuja `away` px a la izquierda, fuera del sprite, y su sombra se desplaza de vuelta con shadowOffsetX
+export function createHaloSprite(
+  skin: AsteroidsSkin,
+  points: readonly (readonly [number, number])[],
+  radius: number,
+  color: string,
+): HTMLCanvasElement {
+  const half = Math.ceil(radius) + glowPad(skin);
+  const [sprite, g] = createCanvas(half * 2);
+  const away = sprite.width;
+  g.shadowColor = color;
+  g.shadowBlur = skin.glow;
+  g.shadowOffsetX = away;
+  g.strokeStyle = color;
+  g.lineWidth = skin.lineWidth;
+  g.lineJoin = "round";
+  g.beginPath();
+  g.moveTo(half - away + points[0][0], half + points[0][1]);
+  for (let i = 1; i < points.length; i++)
+    g.lineTo(half - away + points[i][0], half + points[i][1]);
+  g.closePath();
+  g.stroke();
+  return sprite;
+}
+
+// El halo gira con el asteroide: el desenfoque es isótropo, así que rotarlo equivale a desenfocar la forma rotada
+export function drawHalo(
+  ctx: CanvasRenderingContext2D,
+  sprite: HTMLCanvasElement,
+  x: number,
+  y: number,
+  rotation: number,
+): void {
+  const half = sprite.width / 2;
+  const cos = Math.cos(rotation);
+  const sin = Math.sin(rotation);
+  ctx.setTransform(cos, sin, -sin, cos, x, y);
+  ctx.drawImage(sprite, -half, -half);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
 export function applyGlow(
   ctx: CanvasRenderingContext2D,
   skin: AsteroidsSkin,
@@ -64,10 +162,16 @@ export function fillPixels(
 
 // Dibuja un contorno en coordenadas locales (origen + rotación). Vectorial (pixelScale 1):
 // translate, rotate y stroke. Pixel art (pixelScale > 1): rota los puntos a mano y los traza con plotLine.
+// Arreglos de trabajo de la grilla lógica de Retro: se reescriben en cada trazo y se leen en el mismo
+const gridX: number[] = [];
+const gridY: number[] = [];
+
 export function strokeShape(
   ctx: CanvasRenderingContext2D,
   skin: AsteroidsSkin,
-  origin: { x: number; y: number; rotation: number },
+  x: number,
+  y: number,
+  rotation: number,
   points: readonly (readonly [number, number])[],
   color: string,
   closed: boolean,
@@ -76,8 +180,8 @@ export function strokeShape(
 
   if (skin.pixelScale <= 1) {
     ctx.save();
-    ctx.translate(origin.x, origin.y);
-    ctx.rotate(origin.rotation);
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
     ctx.strokeStyle = color;
     ctx.lineWidth = skin.lineWidth;
     ctx.lineJoin = "round";
@@ -92,25 +196,18 @@ export function strokeShape(
   }
 
   // Toda coordenada del mundo (800×600) pasa a la grilla lógica con floor, para alinear a enteros.
-  const cos = Math.cos(origin.rotation);
-  const sin = Math.sin(origin.rotation);
-  const grid = points.map(([px, py]) => [
-    Math.floor((origin.x + px * cos - py * sin) / skin.pixelScale),
-    Math.floor((origin.y + px * sin + py * cos) / skin.pixelScale),
-  ]);
-  for (let i = 1; i < grid.length; i++)
-    plotLine(
-      ctx,
-      grid[i - 1][0],
-      grid[i - 1][1],
-      grid[i][0],
-      grid[i][1],
-      color,
-    );
-  if (closed && grid.length > 2) {
-    const last = grid[grid.length - 1];
-    plotLine(ctx, last[0], last[1], grid[0][0], grid[0][1], color);
+  const cos = Math.cos(rotation);
+  const sin = Math.sin(rotation);
+  const n = points.length;
+  for (let i = 0; i < n; i++) {
+    const p = points[i];
+    gridX[i] = Math.floor((x + p[0] * cos - p[1] * sin) / skin.pixelScale);
+    gridY[i] = Math.floor((y + p[0] * sin + p[1] * cos) / skin.pixelScale);
   }
+  for (let i = 1; i < n; i++)
+    plotLine(ctx, gridX[i - 1], gridY[i - 1], gridX[i], gridY[i], color);
+  if (closed && n > 2)
+    plotLine(ctx, gridX[n - 1], gridY[n - 1], gridX[0], gridY[0], color);
 }
 
 // "#ff006e", 0.5 → "rgba(255, 0, 110, 0.50)"

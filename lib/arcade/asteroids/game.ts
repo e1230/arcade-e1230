@@ -10,6 +10,7 @@ import { createKeyboard } from "@/lib/arcade/shared/keyboard";
 import { dist, rand } from "@/lib/arcade/shared/math";
 import { DEFAULT_SKIN } from "@/lib/arcade/shared/skins";
 import { SKINS } from "@/lib/arcade/asteroids/skins";
+import { createRenderCache } from "@/lib/arcade/asteroids/render";
 import {
   Asteroid,
   Bullet,
@@ -61,6 +62,7 @@ export function createAsteroidsEngine(
     throw new Error("No se pudo obtener el contexto 2d del canvas");
   const ctx: CanvasRenderingContext2D = context2d;
   const skin = SKINS[options?.skin ?? DEFAULT_SKIN];
+  const cache = createRenderCache(skin);
 
   // Retro dibuja la escena en un búfer reducido y la amplía sin suavizado; el canvas visible conserva su tamaño
   let buffer: HTMLCanvasElement | null = null;
@@ -72,6 +74,8 @@ export function createAsteroidsEngine(
     bufferCtx = buffer.getContext("2d");
     if (!bufferCtx)
       throw new Error("No se pudo obtener el contexto 2d del búfer");
+    // Retro amplía el búfer sin suavizado: se fija una vez, no en cada frame
+    ctx.imageSmoothingEnabled = false;
   }
 
   const keyboard = createKeyboard();
@@ -79,6 +83,8 @@ export function createAsteroidsEngine(
   let state: AsteroidsState = createInitialState();
   let rafId: number | null = null;
   let lastTime: number | null = null;
+  // Fragmentos que nacen en el frame: se agregan tras recorrer todas las colisiones
+  const fragments: Asteroid[] = [];
 
   function createInitialState(): AsteroidsState {
     return {
@@ -160,18 +166,32 @@ export function createAsteroidsEngine(
     }
   }
 
+  // Quita en el mismo arreglo las entidades muertas, sin crear arreglos ni closures por frame
+  function compact<T extends { dead: boolean }>(list: T[]): void {
+    let write = 0;
+    for (let read = 0; read < list.length; read++) {
+      const item = list[read];
+      if (!item.dead) list[write++] = item;
+    }
+    list.length = write;
+  }
+
+  function updateAll(list: { update(dt: number): void }[], dt: number): void {
+    for (let i = 0; i < list.length; i++) list[i].update(dt);
+  }
+
   function update(dt: number): void {
     if (state.phase === "gameover") {
-      state.particles.forEach((p) => p.update(dt));
-      state.particles = state.particles.filter((p) => !p.dead);
+      updateAll(state.particles, dt);
+      compact(state.particles);
       return;
     }
 
     if (state.phase === "dead") {
       state.deadTimer -= dt;
-      state.particles.forEach((p) => p.update(dt));
-      state.particles = state.particles.filter((p) => !p.dead);
-      state.asteroids.forEach((a) => a.update(dt));
+      updateAll(state.particles, dt);
+      compact(state.particles);
+      updateAll(state.asteroids, dt);
       if (state.deadTimer <= 0) {
         state.phase = "playing";
         state.ship.reset();
@@ -184,14 +204,14 @@ export function createAsteroidsEngine(
     }
 
     state.ship.update(dt, keyboard);
-    state.bullets.forEach((b) => b.update(dt));
-    state.asteroids.forEach((a) => a.update(dt));
-    state.particles.forEach((p) => p.update(dt));
-    state.powerUps.forEach((p) => p.update(dt));
+    updateAll(state.bullets, dt);
+    updateAll(state.asteroids, dt);
+    updateAll(state.particles, dt);
+    updateAll(state.powerUps, dt);
 
-    state.bullets = state.bullets.filter((b) => !b.dead);
-    state.particles = state.particles.filter((p) => !p.dead);
-    state.powerUps = state.powerUps.filter((p) => !p.dead);
+    compact(state.bullets);
+    compact(state.particles);
+    compact(state.powerUps);
 
     for (const powerUp of state.powerUps) {
       if (
@@ -203,7 +223,7 @@ export function createAsteroidsEngine(
       }
     }
 
-    const newAsteroids: Asteroid[] = [];
+    fragments.length = 0;
     for (const bullet of state.bullets) {
       for (const asteroid of state.asteroids) {
         if (
@@ -215,7 +235,8 @@ export function createAsteroidsEngine(
           asteroid.dead = true;
           setScore(state.score + POINTS[asteroid.size]);
           explode(asteroid.x, asteroid.y, asteroid.size * 5);
-          newAsteroids.push(...asteroid.split());
+          const pieces = asteroid.split();
+          for (let i = 0; i < pieces.length; i++) fragments.push(pieces[i]);
           if (!state.powerUpSpawned) {
             state.killsSinceSpawn++;
             const guaranteed =
@@ -228,10 +249,10 @@ export function createAsteroidsEngine(
         }
       }
     }
-    state.asteroids = state.asteroids
-      .filter((a) => !a.dead)
-      .concat(newAsteroids);
-    state.bullets = state.bullets.filter((b) => !b.dead);
+    compact(state.asteroids);
+    for (let i = 0; i < fragments.length; i++)
+      state.asteroids.push(fragments[i]);
+    compact(state.bullets);
 
     if (state.ship.invincible <= 0) {
       for (const asteroid of state.asteroids) {
@@ -256,19 +277,21 @@ export function createAsteroidsEngine(
     target.fillStyle = skin.background;
     target.fillRect(0, 0, targetWidth, targetHeight);
 
-    state.particles.forEach((p) => p.draw(target, skin));
-    state.asteroids.forEach((a) => a.draw(target, skin));
-    state.powerUps.forEach((p) => p.draw(target, skin));
-    state.bullets.forEach((b) => b.draw(target, skin));
+    for (let i = 0; i < state.particles.length; i++)
+      state.particles[i].draw(target, skin, cache);
+    for (let i = 0; i < state.asteroids.length; i++)
+      state.asteroids[i].draw(target, skin);
+    for (let i = 0; i < state.powerUps.length; i++)
+      state.powerUps[i].draw(target, skin);
+    for (let i = 0; i < state.bullets.length; i++)
+      state.bullets[i].draw(target, skin, cache);
     state.ship.draw(target, skin);
 
-    if (buffer) {
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(buffer, 0, 0, WIDTH, HEIGHT);
-    }
+    if (buffer) ctx.drawImage(buffer, 0, 0, WIDTH, HEIGHT);
 
     // El texto va siempre sobre el canvas principal, a tamaño completo
-    state.powerUps.forEach((p) => p.drawLabel(ctx, skin));
+    for (let i = 0; i < state.powerUps.length; i++)
+      state.powerUps[i].drawLabel(ctx, skin);
     if (state.ship.tripleShot > 0) {
       ctx.textAlign = "left";
       ctx.textBaseline = "alphabetic";
@@ -278,11 +301,28 @@ export function createAsteroidsEngine(
     }
   }
 
+  function stopLoop(): void {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  }
+
+  // La partida terminó y ya no queda ninguna partícula que animar: el estado no vuelve a cambiar
+  function isFinished(): boolean {
+    return state.phase === "gameover" && state.particles.length === 0;
+  }
+
   function loop(ts: number): void {
     const dt = lastTime === null ? 0 : Math.min((ts - lastTime) / 1000, MAX_DT);
     lastTime = ts;
     update(dt);
     draw();
+    // Tras el último frame no se pide otro: el modal tapa el canvas y nada más se mueve
+    if (isFinished()) {
+      rafId = null;
+      return;
+    }
     rafId = requestAnimationFrame(loop);
   }
 
@@ -291,25 +331,23 @@ export function createAsteroidsEngine(
       initGame();
       keyboard.attach();
       lastTime = null;
+      stopLoop();
       rafId = requestAnimationFrame(loop);
     },
     pause() {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
+      stopLoop();
       keyboard.detach();
     },
     resume() {
-      keyboard.attach();
+      // Tras el fin de partida el teclado queda suelto para que Espacio active los botones del modal
+      if (state.phase !== "gameover") keyboard.attach();
+      if (isFinished()) return;
       lastTime = null;
+      stopLoop();
       rafId = requestAnimationFrame(loop);
     },
     destroy() {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
+      stopLoop();
       keyboard.detach();
     },
   };
