@@ -44,7 +44,10 @@ import {
   type Facing as Direction,
   type RenderState,
 } from "@/lib/arcade/frogger/render";
-import { drawGamePixels } from "@/lib/arcade/frogger/render-pixel";
+import {
+  createTerrainLayer,
+  drawGamePixels,
+} from "@/lib/arcade/frogger/render-pixel";
 import { SKINS } from "@/lib/arcade/frogger/skins";
 import { createKeyboard } from "@/lib/arcade/shared/keyboard";
 import { DEFAULT_SKIN } from "@/lib/arcade/shared/skins";
@@ -138,6 +141,7 @@ export function createFroggerEngine(
   // Retro dibuja la escena en un búfer reducido y la amplía sin suavizado; el canvas visible conserva su tamaño.
   let buffer: HTMLCanvasElement | null = null;
   let bufferCtx: CanvasRenderingContext2D | null = null;
+  let terrain: HTMLCanvasElement | null = null;
   if (skin.pixelScale > 1) {
     buffer = document.createElement("canvas");
     buffer.width = WIDTH / skin.pixelScale;
@@ -148,6 +152,7 @@ export function createFroggerEngine(
     }
     // El canvas visible no cambia de tamaño después de `create`, así que basta fijarlo una vez
     ctx.imageSmoothingEnabled = false;
+    terrain = createTerrainLayer(skin);
   }
 
   // Neón (con glow) dibuja vehículos, troncos, tortugas y ranas de las bocas desde una caché de sprites.
@@ -403,8 +408,8 @@ export function createFroggerEngine(
   }
 
   function draw(): void {
-    if (buffer && bufferCtx) {
-      drawGamePixels(bufferCtx, updateView(), skin);
+    if (buffer && bufferCtx && terrain) {
+      drawGamePixels(bufferCtx, updateView(), skin, terrain);
       ctx!.drawImage(buffer, 0, 0, WIDTH, HEIGHT);
       return;
     }
