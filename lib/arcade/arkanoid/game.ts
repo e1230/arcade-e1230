@@ -204,9 +204,13 @@ export function createArkanoidEngine(
 
   // Rompe como máximo un bloque por frame. Devuelve true si terminó la partida.
   function breakBlocks(): boolean {
-    const hit = state.blocks.find(
-      (block) => block.alive && overlapsBall(block),
-    );
+    let hit: Block | null = null;
+    for (const block of state.blocks) {
+      if (block.alive && overlapsBall(block)) {
+        hit = block;
+        break;
+      }
+    }
     if (!hit) return false;
 
     hit.alive = false;
@@ -232,10 +236,14 @@ export function createArkanoidEngine(
   }
 
   function updateExplosions(dt: number): void {
-    for (const explosion of state.explosions) explosion.elapsed += dt;
-    state.explosions = state.explosions.filter(
-      (explosion) => explosion.elapsed < EXPLOSION_DURATION,
-    );
+    const list = state.explosions;
+    let kept = 0;
+    for (let i = 0; i < list.length; i++) {
+      const explosion = list[i];
+      explosion.elapsed += dt;
+      if (explosion.elapsed < EXPLOSION_DURATION) list[kept++] = explosion;
+    }
+    list.length = kept;
   }
 
   // Devuelve true si terminó la partida.
