@@ -284,7 +284,7 @@ export function createAsteroidsEngine(
     for (let i = 0; i < state.powerUps.length; i++)
       state.powerUps[i].draw(target, skin);
     for (let i = 0; i < state.bullets.length; i++)
-      state.bullets[i].draw(target, skin);
+      state.bullets[i].draw(target, skin, cache);
     state.ship.draw(target, skin);
 
     if (buffer) ctx.drawImage(buffer, 0, 0, WIDTH, HEIGHT);

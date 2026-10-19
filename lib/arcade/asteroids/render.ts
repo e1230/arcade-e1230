@@ -15,12 +15,90 @@ export interface RenderCache {
   bulletHalf: number;
 }
 
+// Margen de los sprites con glow: 3 σ del desenfoque (σ = shadowBlur / 2) más el trazo.
+// Con glow 8 y lineWidth 2 son 18 px, para que el blur no se recorte.
+export function glowPad(skin: AsteroidsSkin): number {
+  return Math.ceil(skin.glow * 2) + skin.lineWidth;
+}
+
+function createCanvas(
+  size: number,
+): [HTMLCanvasElement, CanvasRenderingContext2D] {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const g = canvas.getContext("2d");
+  if (!g) throw new Error("No se pudo obtener el contexto 2d del sprite");
+  return [canvas, g];
+}
+
+// Bala: círculo de radio 2 con glow horneado, con el centro en (half, half)
+function createBulletSprite(
+  skin: AsteroidsSkin,
+  radius: number,
+): [HTMLCanvasElement, number] {
+  const half = radius + glowPad(skin);
+  const [sprite, g] = createCanvas(half * 2);
+  applyGlow(g, skin, skin.bullet);
+  g.fillStyle = skin.bullet;
+  g.beginPath();
+  g.arc(half, half, radius, 0, Math.PI * 2);
+  g.fill();
+  return [sprite, half];
+}
+
 // Se construye una vez en `create`: la skin no cambia durante la partida
 export function createRenderCache(skin: AsteroidsSkin): RenderCache {
   const particleStyles: string[] = [];
   for (let i = 0; i <= ALPHA_STEPS; i++)
     particleStyles.push(hexToRgba(skin.particle, i / ALPHA_STEPS));
+  if (skin.glow > 0) {
+    const [bulletSprite, bulletHalf] = createBulletSprite(skin, 2);
+    return { particleStyles, bulletSprite, bulletHalf };
+  }
   return { particleStyles, bulletSprite: null, bulletHalf: 0 };
+}
+
+// Solo el halo del glow de un contorno cerrado, sin el trazo, para dibujar el trazo nítido en vivo encima.
+// El contorno se dibuja `away` px a la izquierda, fuera del sprite, y su sombra se desplaza de vuelta con shadowOffsetX
+export function createHaloSprite(
+  skin: AsteroidsSkin,
+  points: readonly (readonly [number, number])[],
+  radius: number,
+  color: string,
+): HTMLCanvasElement {
+  const half = Math.ceil(radius) + glowPad(skin);
+  const [sprite, g] = createCanvas(half * 2);
+  const away = sprite.width;
+  g.shadowColor = color;
+  g.shadowBlur = skin.glow;
+  g.shadowOffsetX = away;
+  g.strokeStyle = color;
+  g.lineWidth = skin.lineWidth;
+  g.lineJoin = "round";
+  g.beginPath();
+  g.moveTo(half - away + points[0][0], half + points[0][1]);
+  for (let i = 1; i < points.length; i++)
+    g.lineTo(half - away + points[i][0], half + points[i][1]);
+  g.closePath();
+  g.stroke();
+  return sprite;
+}
+
+// El halo gira con el asteroide: el desenfoque es isótropo, así que rotarlo equivale a desenfocar la forma rotada
+export function drawHalo(
+  ctx: CanvasRenderingContext2D,
+  sprite: HTMLCanvasElement,
+  x: number,
+  y: number,
+  rotation: number,
+): void {
+  const half = sprite.width / 2;
+  const cos = Math.cos(rotation);
+  const sin = Math.sin(rotation);
+  ctx.setTransform(cos, sin, -sin, cos, x, y);
+  ctx.drawImage(sprite, -half, -half);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 export function applyGlow(

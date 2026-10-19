@@ -24,6 +24,8 @@ import {
   ALPHA_STEPS,
   applyGlow,
   clearGlow,
+  createHaloSprite,
+  drawHalo,
   fillPixels,
   strokeShape,
   type RenderCache,
@@ -76,7 +78,11 @@ export class Bullet {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin): void {
+  draw(
+    ctx: CanvasRenderingContext2D,
+    skin: AsteroidsSkin,
+    cache: RenderCache,
+  ): void {
     if (skin.pixelScale > 1) {
       // Cuadrado de 2×2 píxeles lógicos centrado en la bala
       fillPixels(
@@ -88,12 +94,20 @@ export class Bullet {
       );
       return;
     }
-    applyGlow(ctx, skin, skin.bullet);
+    if (cache.bulletSprite) {
+      // Neón: sprite con el glow horneado, a coordenadas enteras
+      const half = cache.bulletHalf;
+      ctx.drawImage(
+        cache.bulletSprite,
+        Math.round(this.x) - half,
+        Math.round(this.y) - half,
+      );
+      return;
+    }
     ctx.fillStyle = skin.bullet;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
-    clearGlow(ctx);
   }
 }
 
@@ -107,6 +121,8 @@ export class Asteroid {
   rotSpeed: number;
   rot: number;
   verts: [number, number][] = [];
+  // Halo del glow de Neón, horneado en el primer draw
+  halo: HTMLCanvasElement | null = null;
   dead = false;
 
   constructor(x: number, y: number, size = 3) {
@@ -145,7 +161,16 @@ export class Asteroid {
   }
 
   draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin): void {
-    applyGlow(ctx, skin, skin.asteroid);
+    if (skin.glow > 0) {
+      // El halo depende de la forma aleatoria del asteroide: se hornea en su primer draw y se reutiliza
+      this.halo ??= createHaloSprite(
+        skin,
+        this.verts,
+        this.radius,
+        skin.asteroid,
+      );
+      drawHalo(ctx, this.halo, this.x, this.y, this.rot);
+    }
     strokeShape(
       ctx,
       skin,
@@ -156,7 +181,6 @@ export class Asteroid {
       skin.asteroid,
       true,
     );
-    clearGlow(ctx);
   }
 }
 
