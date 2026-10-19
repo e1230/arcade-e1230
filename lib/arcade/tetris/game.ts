@@ -266,11 +266,23 @@ export function createTetrisEngine(
     drawPanel(ctx, state.next, state.lines);
   }
 
+  function stopLoop(): void {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  }
+
   function loop(ts: number): void {
     const dt = lastTime === null ? 0 : Math.min((ts - lastTime) / 1000, MAX_DT);
     lastTime = ts;
     update(dt);
     draw();
+    // Tras el último frame de la partida no se pide otro: el modal tapa el canvas
+    if (isGameOver()) {
+      rafId = null;
+      return;
+    }
     rafId = requestAnimationFrame(loop);
   }
 
@@ -281,26 +293,24 @@ export function createTetrisEngine(
       callbacks.onLevel(state.level);
       keyboard.attach();
       lastTime = null;
+      stopLoop();
       rafId = requestAnimationFrame(loop);
     },
     pause() {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
+      stopLoop();
       keyboard.detach();
     },
     resume() {
-      // Tras el fin de partida el teclado queda suelto, para que Espacio active los botones del modal
-      if (state.phase === "playing") keyboard.attach();
+      // Tras el fin de partida no hay nada que redibujar y el teclado queda suelto
+      // para que Espacio active los botones del modal
+      if (isGameOver()) return;
+      keyboard.attach();
       lastTime = null;
+      stopLoop();
       rafId = requestAnimationFrame(loop);
     },
     destroy() {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
+      stopLoop();
       keyboard.detach();
     },
   };
