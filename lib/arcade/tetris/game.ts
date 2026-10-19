@@ -37,7 +37,12 @@ import {
   type ActivePiece,
   type PieceType,
 } from "@/lib/arcade/tetris/pieces";
-import { drawBoard, drawPanel, drawPiece } from "@/lib/arcade/tetris/render";
+import {
+  drawBoard,
+  drawGhost,
+  drawPanel,
+  drawPiece,
+} from "@/lib/arcade/tetris/render";
 
 type Phase = "playing" | "gameover"; // game.js usa los flags paused y gameOver; la pausa ahora es de la plataforma
 
@@ -259,10 +264,9 @@ export function createTetrisEngine(
     drawBoard(ctx, state.board);
     // En "gameover" no hay fantasma: la pieza que no cupo queda superpuesta
     if (state.phase === "playing") {
-      const landing = ghostY(state.board, state.current);
-      drawPiece(ctx, { ...state.current, y: landing }, "ghost");
+      drawGhost(ctx, state.current, ghostY(state.board, state.current));
     }
-    drawPiece(ctx, state.current, "active");
+    drawPiece(ctx, state.current);
     drawPanel(ctx, state.next, state.lines);
   }
 

@@ -26,9 +26,6 @@ const BOARD_WIDTH = COLS * BLOCK; // 280 px
 const BOARD_HEIGHT = ROWS * BLOCK; // 560 px
 const NEXT_BOX_SIZE = NEXT_BOX_CELLS * BLOCK; // 112 px
 
-// "active": pieza que cae, con glow; "ghost": solo el contorno donde aterrizaría
-export type PieceStyle = "active" | "ghost";
-
 // Celda en (x, y) px: relleno translúcido y borde de 2 px, o solo el borde tenue si es fantasma
 function drawCell(
   ctx: CanvasRenderingContext2D,
@@ -101,22 +98,34 @@ export function drawBoard(ctx: CanvasRenderingContext2D, board: Board): void {
   drawFrame(ctx, BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);
 }
 
-// Pieza sobre el tablero en su posición (piece.x, piece.y)
+// Fantasma: solo el contorno de la pieza en la fila donde aterrizaría
+export function drawGhost(
+  ctx: CanvasRenderingContext2D,
+  piece: ActivePiece,
+  y: number,
+): void {
+  drawShape(
+    ctx,
+    piece.shape,
+    BOARD_X + piece.x * BLOCK,
+    BOARD_Y + y * BLOCK,
+    true,
+  );
+}
+
+// Pieza que cae, con glow
 export function drawPiece(
   ctx: CanvasRenderingContext2D,
   piece: ActivePiece,
-  style: PieceStyle,
 ): void {
-  if (style === "active") {
-    ctx.shadowBlur = GLOW_BLUR;
-    ctx.shadowColor = PIECE_COLORS[piece.type];
-  }
+  ctx.shadowBlur = GLOW_BLUR;
+  ctx.shadowColor = PIECE_COLORS[piece.type];
   drawShape(
     ctx,
     piece.shape,
     BOARD_X + piece.x * BLOCK,
     BOARD_Y + piece.y * BLOCK,
-    style === "ghost",
+    false,
   );
   ctx.shadowBlur = 0;
 }
