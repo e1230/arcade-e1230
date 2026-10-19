@@ -50,6 +50,23 @@ const FRUITS: readonly Rect[] = [
 
 export const FRUIT_COUNT = FRUITS.length; // 22
 
+interface FruitDraw extends Rect {
+  dx: number; // desfase horizontal dentro de la celda: (CELL − w) / 2
+  dy: number; // desfase vertical dentro de la celda: (CELL − h) / 2
+  w: number; // ancho escalado
+  h: number; // alto escalado
+}
+
+// Una entrada por fruta, en el mismo orden que FRUITS. Se calcula una vez al cargar el módulo.
+// Escala sin deformar: el recorte entra en FRUIT_BOX × FRUIT_BOX y se centra en la celda.
+// No se redondea para que cada fruta caiga en las mismas coordenadas de siempre.
+const FRUIT_DRAWS: readonly FruitDraw[] = FRUITS.map(({ sx, sy, sw, sh }) => {
+  const scale = Math.min(FRUIT_BOX / sw, FRUIT_BOX / sh);
+  const w = sw * scale;
+  const h = sh * scale;
+  return { sx, sy, sw, sh, dx: (CELL - w) / 2, dy: (CELL - h) / 2, w, h };
+});
+
 export interface FruitSprites {
   isReady(): boolean; // false hasta que carga la imagen
   drawFruit(
@@ -78,14 +95,18 @@ export function loadFruitSprites(): FruitSprites {
     isReady: () => ready,
     drawFruit(ctx, fruitIndex, col, row) {
       if (!ready) return;
-      const { sx, sy, sw, sh } = FRUITS[fruitIndex];
-      // Escala sin deformar: el recorte entra en FRUIT_BOX × FRUIT_BOX y se centra en la celda.
-      const scale = Math.min(FRUIT_BOX / sw, FRUIT_BOX / sh);
-      const w = sw * scale;
-      const h = sh * scale;
-      const x = col * CELL + (CELL - w) / 2;
-      const y = row * CELL + (CELL - h) / 2;
-      ctx.drawImage(image, sx, sy, sw, sh, x, y, w, h);
+      const f = FRUIT_DRAWS[fruitIndex];
+      ctx.drawImage(
+        image,
+        f.sx,
+        f.sy,
+        f.sw,
+        f.sh,
+        col * CELL + f.dx,
+        row * CELL + f.dy,
+        f.w,
+        f.h,
+      );
     },
     dispose() {
       image.onload = null;
