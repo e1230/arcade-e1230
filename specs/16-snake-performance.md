@@ -1,6 +1,6 @@
 # SPEC 16 — Rendimiento de SNAKE
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 09 (`specs/09-snake-game.md`)
 > **Fecha:** 2026-10-12
 > **Objetivo:** Que SNAKE cumpla el presupuesto de rendimiento (no tiene skins: una sola pasada), sin cambiar su jugabilidad ni su look, eliminando el loop que sigue dibujando (con glow) debajo del modal de fin de partida y limpiando las asignaciones por frame de la lectura de teclas, de la cabeza, de la fruta y de la colisión con el cuerpo.

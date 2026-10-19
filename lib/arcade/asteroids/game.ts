@@ -278,11 +278,28 @@ export function createAsteroidsEngine(
     }
   }
 
+  function stopLoop(): void {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  }
+
+  // La partida terminó y ya no queda ninguna partícula que animar: el estado no vuelve a cambiar
+  function isFinished(): boolean {
+    return state.phase === "gameover" && state.particles.length === 0;
+  }
+
   function loop(ts: number): void {
     const dt = lastTime === null ? 0 : Math.min((ts - lastTime) / 1000, MAX_DT);
     lastTime = ts;
     update(dt);
     draw();
+    // Tras el último frame no se pide otro: el modal tapa el canvas y nada más se mueve
+    if (isFinished()) {
+      rafId = null;
+      return;
+    }
     rafId = requestAnimationFrame(loop);
   }
 
@@ -291,25 +308,23 @@ export function createAsteroidsEngine(
       initGame();
       keyboard.attach();
       lastTime = null;
+      stopLoop();
       rafId = requestAnimationFrame(loop);
     },
     pause() {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
+      stopLoop();
       keyboard.detach();
     },
     resume() {
-      keyboard.attach();
+      // Tras el fin de partida el teclado queda suelto para que Espacio active los botones del modal
+      if (state.phase !== "gameover") keyboard.attach();
+      if (isFinished()) return;
       lastTime = null;
+      stopLoop();
       rafId = requestAnimationFrame(loop);
     },
     destroy() {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
+      stopLoop();
       keyboard.detach();
     },
   };
