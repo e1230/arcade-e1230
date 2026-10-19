@@ -1,6 +1,6 @@
 # SPEC 17 — Rendimiento de ASTEROIDS
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 05 (`specs/05-asteroids-game.md`), SPEC 10 (`specs/10-asteroids-skins.md`)
 > **Fecha:** 2026-10-12
 > **Objetivo:** Que ASTEROIDS cumpla el presupuesto de rendimiento en todas sus skins (Clásico, Neón y Retro), sin cambiar su jugabilidad ni su look, eliminando el loop que sigue dibujando debajo del modal de fin de partida, los 11 a 19 dibujos con `shadowBlur` por frame de Neón (asteroides y balas) y las asignaciones por frame de las partículas, del trazo en Retro y del bucle de actualización.
