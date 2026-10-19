@@ -1,5 +1,6 @@
 // Dibujo del tablero, las piezas y el panel en la resolución interna de 800×600.
-// Cada función deja `globalAlpha = 1` y `shadowBlur = 0` al terminar.
+// Cada función deja `globalAlpha = 1` al terminar. El glow de la pieza activa va horneado
+// en sprites (`createPieceSprites`), así que el contexto principal nunca recibe `shadowBlur`.
 
 import {
   BLOCK,
@@ -26,8 +27,12 @@ const BOARD_WIDTH = COLS * BLOCK; // 280 px
 const BOARD_HEIGHT = ROWS * BLOCK; // 560 px
 const NEXT_BOX_SIZE = NEXT_BOX_CELLS * BLOCK; // 112 px
 
-// "active": pieza que cae, con glow; "ghost": solo el contorno donde aterrizaría
-export type PieceStyle = "active" | "ghost";
+// Margen alrededor de la celda para que el blur no se recorte (el glow de 8 px llega a ~12 px)
+const GLOW_PAD = 16;
+const SPRITE_SIZE = BLOCK + GLOW_PAD * 2; // 60 px
+
+// Una celda con relleno, borde y glow horneados por tipo de pieza (1 a 8)
+export type PieceSprites = Record<PieceType, HTMLCanvasElement>;
 
 // Celda en (x, y) px: relleno translúcido y borde de 2 px, o solo el borde tenue si es fantasma
 function drawCell(
@@ -101,24 +106,54 @@ export function drawBoard(ctx: CanvasRenderingContext2D, board: Board): void {
   drawFrame(ctx, BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT);
 }
 
-// Pieza sobre el tablero en su posición (piece.x, piece.y)
-export function drawPiece(
+// Fantasma: solo el contorno de la pieza en la fila donde aterrizaría
+export function drawGhost(
   ctx: CanvasRenderingContext2D,
   piece: ActivePiece,
-  style: PieceStyle,
+  y: number,
 ): void {
-  if (style === "active") {
-    ctx.shadowBlur = GLOW_BLUR;
-    ctx.shadowColor = PIECE_COLORS[piece.type];
-  }
   drawShape(
     ctx,
     piece.shape,
     BOARD_X + piece.x * BLOCK,
-    BOARD_Y + piece.y * BLOCK,
-    style === "ghost",
+    BOARD_Y + y * BLOCK,
+    true,
   );
-  ctx.shadowBlur = 0;
+}
+
+// Una celda con glow horneado por tipo de pieza; se llama una sola vez en `create`
+export function createPieceSprites(): PieceSprites {
+  const sprites = {} as PieceSprites;
+  for (const key of Object.keys(PIECE_COLORS)) {
+    const type = Number(key) as PieceType;
+    const sprite = document.createElement("canvas");
+    sprite.width = SPRITE_SIZE;
+    sprite.height = SPRITE_SIZE;
+    const spriteCtx = sprite.getContext("2d");
+    if (!spriteCtx)
+      throw new Error("No se pudo obtener el contexto 2d del sprite");
+    spriteCtx.shadowBlur = GLOW_BLUR;
+    spriteCtx.shadowColor = PIECE_COLORS[type];
+    drawCell(spriteCtx, GLOW_PAD, GLOW_PAD, type, false); // mismo dibujo que en vivo
+    sprites[type] = sprite;
+  }
+  return sprites;
+}
+
+// Pieza que cae: una celda precalculada con glow por celda ocupada, sin shadowBlur en el loop
+export function drawPiece(
+  ctx: CanvasRenderingContext2D,
+  piece: ActivePiece,
+  sprites: PieceSprites,
+): void {
+  const left = BOARD_X + piece.x * BLOCK - GLOW_PAD;
+  const top = BOARD_Y + piece.y * BLOCK - GLOW_PAD;
+  for (let r = 0; r < piece.shape.length; r++) {
+    for (let c = 0; c < piece.shape[r].length; c++) {
+      const cell = piece.shape[r][c];
+      if (cell) ctx.drawImage(sprites[cell], left + c * BLOCK, top + r * BLOCK);
+    }
+  }
 }
 
 // Panel derecho: SIGUIENTE con la próxima pieza centrada en su caja y LÍNEAS

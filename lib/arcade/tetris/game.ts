@@ -37,7 +37,13 @@ import {
   type ActivePiece,
   type PieceType,
 } from "@/lib/arcade/tetris/pieces";
-import { drawBoard, drawPanel, drawPiece } from "@/lib/arcade/tetris/render";
+import {
+  createPieceSprites,
+  drawBoard,
+  drawGhost,
+  drawPanel,
+  drawPiece,
+} from "@/lib/arcade/tetris/render";
 
 type Phase = "playing" | "gameover"; // game.js usa los flags paused y gameOver; la pausa ahora es de la plataforma
 
@@ -79,6 +85,7 @@ export function createTetrisEngine(
   const ctx: CanvasRenderingContext2D = context2d;
 
   const keyboard = createKeyboard();
+  const sprites = createPieceSprites(); // una vez: el glow de la pieza activa va horneado
 
   let state: TetrisState = createInitialState();
   let rafId: number | null = null;
@@ -259,11 +266,17 @@ export function createTetrisEngine(
     drawBoard(ctx, state.board);
     // En "gameover" no hay fantasma: la pieza que no cupo queda superpuesta
     if (state.phase === "playing") {
-      const landing = ghostY(state.board, state.current);
-      drawPiece(ctx, { ...state.current, y: landing }, "ghost");
+      drawGhost(ctx, state.current, ghostY(state.board, state.current));
     }
-    drawPiece(ctx, state.current, "active");
+    drawPiece(ctx, state.current, sprites);
     drawPanel(ctx, state.next, state.lines);
+  }
+
+  function stopLoop(): void {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
   }
 
   function loop(ts: number): void {
@@ -271,6 +284,11 @@ export function createTetrisEngine(
     lastTime = ts;
     update(dt);
     draw();
+    // Tras el último frame de la partida no se pide otro: el modal tapa el canvas
+    if (isGameOver()) {
+      rafId = null;
+      return;
+    }
     rafId = requestAnimationFrame(loop);
   }
 
@@ -281,26 +299,24 @@ export function createTetrisEngine(
       callbacks.onLevel(state.level);
       keyboard.attach();
       lastTime = null;
+      stopLoop();
       rafId = requestAnimationFrame(loop);
     },
     pause() {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
+      stopLoop();
       keyboard.detach();
     },
     resume() {
-      // Tras el fin de partida el teclado queda suelto, para que Espacio active los botones del modal
-      if (state.phase === "playing") keyboard.attach();
+      // Tras el fin de partida no hay nada que redibujar y el teclado queda suelto
+      // para que Espacio active los botones del modal
+      if (isGameOver()) return;
+      keyboard.attach();
       lastTime = null;
+      stopLoop();
       rafId = requestAnimationFrame(loop);
     },
     destroy() {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
+      stopLoop();
       keyboard.detach();
     },
   };
