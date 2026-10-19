@@ -323,11 +323,21 @@ export function createArkanoidEngine(
     sprites.drawBall(ctx!, state.ball.x, state.ball.y, BALL_SIZE, BALL_SIZE);
   }
 
+  // Sin animaciones pendientes tras el fin de partida: el canvas queda con su último frame
+  function isIdle(): boolean {
+    return state.phase !== "playing" && state.explosions.length === 0;
+  }
+
   function loop(ts: number): void {
     const dt = lastTime === null ? 0 : Math.min((ts - lastTime) / 1000, MAX_DT);
     lastTime = ts;
     update(dt);
     draw();
+    // Tras el último frame no se vuelve a pedir otro: el modal tapa el canvas
+    if (isIdle()) {
+      rafId = null;
+      return;
+    }
     rafId = requestAnimationFrame(loop);
   }
 
@@ -362,7 +372,8 @@ export function createArkanoidEngine(
       if (state.phase === "playing") attachInput();
       lastTime = null;
       stopLoop();
-      rafId = requestAnimationFrame(loop);
+      // Si la partida ya terminó y no queda nada animándose, no hay nada que redibujar
+      if (!isIdle()) rafId = requestAnimationFrame(loop);
     },
     destroy() {
       destroyed = true;
