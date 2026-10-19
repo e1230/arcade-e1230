@@ -63,6 +63,13 @@ const DELTAS: Record<Direction, Cell> = {
   right: { col: 1, row: 0 },
 };
 
+// Tamaños de las celdas de la serpiente (constantes: no dependen del frame)
+const HEAD_SIZE = CELL - 2 * HEAD_INSET; // 36 px
+const BODY_SIZE = CELL - 2 * BODY_INSET; // 34 px
+
+// Lados de los ojos respecto de la dirección: uno a cada costado
+const EYE_SIGNS = [-1, 1] as const;
+
 const OPPOSITES: Record<Direction, Direction> = {
   up: "down",
   down: "up",
@@ -169,7 +176,11 @@ export function createSnakeEngine(
   // Lee las pulsaciones del frame. Fuera de "waiting" y "playing" se descartan.
   function readInput(): void {
     for (const { direction, codes } of KEY_BINDINGS) {
-      const pressed = codes.map((code) => keyboard.consume(code)).some(Boolean);
+      // Se consumen ambas teclas (flecha y letra) aunque la primera ya esté pulsada
+      let pressed = false;
+      for (let i = 0; i < codes.length; i++) {
+        if (keyboard.consume(codes[i])) pressed = true;
+      }
       if (!pressed) continue;
 
       if (state.phase === "waiting") {
@@ -221,12 +232,13 @@ export function createSnakeEngine(
       newHead.col === state.fruit.col && newHead.row === state.fruit.row;
 
     // La cola se libera en este mismo paso, salvo que se coma una fruta.
-    const solid = eating ? state.snake : state.snake.slice(0, -1);
-    if (
-      solid.some(({ col, row }) => col === newHead.col && row === newHead.row)
-    ) {
-      loseLife();
-      return;
+    const solidLength = eating ? state.snake.length : state.snake.length - 1;
+    for (let i = 0; i < solidLength; i++) {
+      const segment = state.snake[i];
+      if (segment.col === newHead.col && segment.row === newHead.row) {
+        loseLife();
+        return;
+      }
     }
 
     state.snake.unshift(newHead);
@@ -292,24 +304,24 @@ export function createSnakeEngine(
   }
 
   function drawHead(head: Cell): void {
-    const size = CELL - 2 * HEAD_INSET;
     const x = head.col * CELL + HEAD_INSET;
     const y = head.row * CELL + HEAD_INSET;
 
     ctx!.shadowColor = COLORS.body;
     ctx!.shadowBlur = 12;
     ctx!.fillStyle = COLORS.head;
-    ctx!.fillRect(x, y, size, size);
+    ctx!.fillRect(x, y, HEAD_SIZE, HEAD_SIZE);
     ctx!.shadowBlur = 0;
 
     // Los ojos van en el lado delantero, uno a cada costado.
     const forward = DELTAS[state.direction];
-    const side = { col: -forward.row, row: forward.col };
+    const sideCol = -forward.row;
+    const sideRow = forward.col;
     const cx = head.col * CELL + CELL / 2;
     const cy = head.row * CELL + CELL / 2;
-    for (const sign of [-1, 1]) {
-      const ex = cx + forward.col * 8 + side.col * sign * 8;
-      const ey = cy + forward.row * 8 + side.row * sign * 8;
+    for (const sign of EYE_SIGNS) {
+      const ex = cx + forward.col * 8 + sideCol * sign * 8;
+      const ey = cy + forward.row * 8 + sideRow * sign * 8;
       ctx!.fillStyle = COLORS.eye;
       ctx!.fillRect(ex - 3, ey - 3, 6, 6);
       ctx!.fillStyle = COLORS.pupil;
@@ -336,14 +348,13 @@ export function createSnakeEngine(
     if (blinkHidden || state.snake.length === 0) return;
 
     ctx!.fillStyle = COLORS.body;
-    const bodySize = CELL - 2 * BODY_INSET;
     for (let index = 1; index < state.snake.length; index++) {
       const { col, row } = state.snake[index];
       ctx!.fillRect(
         col * CELL + BODY_INSET,
         row * CELL + BODY_INSET,
-        bodySize,
-        bodySize,
+        BODY_SIZE,
+        BODY_SIZE,
       );
     }
     drawHead(state.snake[0]);
