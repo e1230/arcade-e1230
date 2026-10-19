@@ -16,7 +16,8 @@ const GRID_COLS = "grid-cols-[70px_minmax(0,1fr)_minmax(90px,auto)_110px]";
 
 export function HallOfFameTable({ gameId, rows }: HallOfFameTableProps) {
   const { user } = useSession();
-  const userName = user && !user.guest ? user.name : null;
+  // El alias es único e inmutable: sirve para marcar las filas propias
+  const userName = user?.alias ?? null;
   // gameId viaja junto al resultado: al cambiar de pestaña, la marca de la
   // pestaña anterior deja de coincidir y desaparece sin necesidad de resetear
   // el estado de forma síncrona dentro del efecto.

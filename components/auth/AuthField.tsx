@@ -1,10 +1,14 @@
 interface AuthFieldProps {
   label: string;
   type?: "text" | "email" | "password";
+  name?: string;
+  autoComplete?: string;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
   accent?: "cyan" | "pink";
+  disabled?: boolean;
+  maxLength?: number;
 }
 
 const ACCENT_CLASS: Record<NonNullable<AuthFieldProps["accent"]>, string> = {
@@ -15,20 +19,28 @@ const ACCENT_CLASS: Record<NonNullable<AuthFieldProps["accent"]>, string> = {
 export function AuthField({
   label,
   type = "text",
+  name,
+  autoComplete,
   value,
   onChange,
   placeholder,
   accent = "cyan",
+  disabled = false,
+  maxLength,
 }: AuthFieldProps) {
   return (
     <label className="flex flex-col gap-2 text-sm font-bold text-muted">
       {label}
       <input
         type={type}
+        name={name}
+        autoComplete={autoComplete}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`border-2 bg-background px-3.5 py-3 text-base text-foreground outline-none ${ACCENT_CLASS[accent]}`}
+        disabled={disabled}
+        maxLength={maxLength}
+        className={`border-2 bg-background px-3.5 py-3 text-base text-foreground outline-none disabled:opacity-60 ${ACCENT_CLASS[accent]}`}
       />
     </label>
   );

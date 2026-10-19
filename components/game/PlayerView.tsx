@@ -237,7 +237,7 @@ export function PlayerView({ game }: PlayerViewProps) {
     }, TYPE_MS);
   }
 
-  const isGuest = !user || user.guest;
+  const isGuest = !user?.alias;
   const playerName = getPlayerName(user);
   const pauseLabel = state.paused ? "SEGUIR" : "PAUSA";
   const accentHex = ACCENTS[game.accent].hex;

@@ -1,146 +1,210 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { type FormEvent, useState, useTransition } from "react";
+import { signInWithPassword, signUp } from "@/app/auth/actions";
 import { AuthField } from "@/components/auth/AuthField";
-import { Logo } from "@/components/ui/Logo";
+import { AuthPanel } from "@/components/auth/AuthPanel";
 import { NeonButton } from "@/components/ui/NeonButton";
-import { useSession } from "@/lib/session";
+import {
+  ALIAS_MAX_LENGTH,
+  AUTH_ERROR_MESSAGES,
+  type AuthResult,
+  EMAIL_MAX_LENGTH,
+  FIELD_MESSAGES,
+  isValidAlias,
+  isValidEmail,
+  isValidPassword,
+  normalizeAlias,
+} from "@/lib/auth";
 
 export type AuthTab = "login" | "register";
 
 interface AuthCardProps {
   initialTab?: AuthTab;
+  // Ruta interna ya validada con safeNextPath; null si /login llegó sin ?next=
+  next?: string | null;
 }
 
-const ACTIVE_TAB_CLASS = "bg-cyan px-1.5 py-3.5 font-pixel text-[9px] leading-relaxed text-background";
+const ACTIVE_TAB_CLASS =
+  "bg-cyan px-1.5 py-3.5 font-pixel text-[9px] leading-relaxed text-background";
 const INACTIVE_TAB_CLASS =
   "bg-transparent px-1.5 py-3.5 font-pixel text-[9px] leading-relaxed text-muted";
 
-export function AuthCard({ initialTab = "login" }: AuthCardProps) {
-  const router = useRouter();
-  const { signIn } = useSession();
-  const [tab, setTab] = useState<AuthTab>(initialTab);
-  const [form, setForm] = useState({ user: "", pass: "", email: "" });
-  const [error, setError] = useState("");
+const EMPTY_FORM = { alias: "", email: "", pass: "" };
 
-  function pickTab(next: AuthTab) {
-    setTab(next);
+// Mientras se escribe el alias: sin espacios y en mayúsculas, como se guarda en profiles
+function toAliasInput(value: string): string {
+  return value.replace(/\s/g, "").toUpperCase();
+}
+
+export function AuthCard({ initialTab = "login", next = null }: AuthCardProps) {
+  const router = useRouter();
+  const [tab, setTab] = useState<AuthTab>(initialTab);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [error, setError] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  function pickTab(nextTab: AuthTab) {
+    setTab(nextTab);
     setError("");
   }
 
-  function goHome() {
-    setForm({ user: "", pass: "", email: "" });
-    router.push("/");
+  // Devuelve el primer aviso de validación, o "" si el formulario se puede enviar
+  function validate(): string {
+    if (tab === "register" && !isValidAlias(normalizeAlias(form.alias))) {
+      return FIELD_MESSAGES.alias;
+    }
+    if (!isValidEmail(form.email.trim())) return FIELD_MESSAGES.email;
+    if (tab === "register" && !isValidPassword(form.pass)) {
+      return FIELD_MESSAGES.password;
+    }
+    if (tab === "login" && !form.pass) return "Ingresa tu contraseña.";
+    return "";
   }
 
-  function submit() {
-    if (!form.user.trim()) {
-      setError("Ingresa tu usuario.");
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const message = validate();
+    if (message) {
+      setError(message);
       return;
     }
-    if (tab === "register" && !/.+@.+\..+/.test(form.email)) {
-      setError("Ingresa un correo electrónico válido.");
-      return;
-    }
-    if (form.pass.length < 4) {
-      setError("La contraseña debe tener al menos 4 caracteres.");
-      return;
-    }
-    signIn({ name: form.user.trim().toUpperCase().slice(0, 14), guest: false });
-    goHome();
-  }
+    setError("");
 
-  function google() {
-    signIn({ name: "JUGADOR_G", guest: false });
-    goHome();
-  }
-
-  function github() {
-    signIn({ name: "JUGADOR_GH", guest: false });
-    goHome();
+    startTransition(async () => {
+      const destination = next ?? "/";
+      // Si sale bien, la acción redirige y no vuelve con un resultado
+      const result: AuthResult | undefined =
+        tab === "register"
+          ? await signUp({
+              alias: form.alias,
+              email: form.email,
+              password: form.pass,
+              next: destination,
+            })
+          : await signInWithPassword({
+              email: form.email,
+              password: form.pass,
+              next: destination,
+            });
+      if (result?.status === "error")
+        setError(AUTH_ERROR_MESSAGES[result.code]);
+    });
   }
 
   function guest() {
-    signIn({ name: "INVITADO", guest: true });
-    goHome();
+    router.push(next ?? "/games");
   }
 
-  return (
-    <div className="flex w-full max-w-[420px] flex-col gap-5.5 border-2 border-cyan/60 bg-surface/95 p-8.5 py-7 shadow-[0_0_30px_rgba(0,245,255,.25)]">
-      <div className="flex justify-center">
-        <Logo size="card" />
-      </div>
+  const isRegister = tab === "register";
+  const submitLabel = isRegister
+    ? pending
+      ? "CREANDO…"
+      : "CREAR CUENTA"
+    : pending
+      ? "ENTRANDO…"
+      : "ENTRAR";
 
+  return (
+    <AuthPanel>
       <div className="grid grid-cols-2 border border-border">
         <button
+          type="button"
           onClick={() => pickTab("login")}
           className={`cursor-pointer border-0 ${tab === "login" ? ACTIVE_TAB_CLASS : INACTIVE_TAB_CLASS}`}
         >
           INICIAR SESIÓN
         </button>
         <button
+          type="button"
           onClick={() => pickTab("register")}
-          className={`cursor-pointer border-0 ${tab === "register" ? ACTIVE_TAB_CLASS : INACTIVE_TAB_CLASS}`}
+          className={`cursor-pointer border-0 ${isRegister ? ACTIVE_TAB_CLASS : INACTIVE_TAB_CLASS}`}
         >
           CREAR CUENTA
         </button>
       </div>
 
-      <div className="flex flex-col gap-4">
-        <AuthField
-          label="Usuario"
-          value={form.user}
-          onChange={(user) => setForm((f) => ({ ...f, user }))}
-          placeholder="tu_alias"
-          accent="cyan"
-        />
-        {tab === "register" && (
+      <form onSubmit={submit} noValidate className="flex flex-col gap-4">
+        {isRegister && (
           <AuthField
-            label="Correo electrónico"
-            type="email"
-            value={form.email}
-            onChange={(email) => setForm((f) => ({ ...f, email }))}
-            placeholder="jugador@correo.com"
-            accent="pink"
+            label="Alias"
+            name="alias"
+            autoComplete="username"
+            value={form.alias}
+            onChange={(alias) =>
+              setForm((f) => ({ ...f, alias: toAliasInput(alias) }))
+            }
+            placeholder="TU_ALIAS"
+            accent="cyan"
+            maxLength={ALIAS_MAX_LENGTH}
+            disabled={pending}
           />
         )}
         <AuthField
+          label="Correo electrónico"
+          type="email"
+          name="email"
+          autoComplete="email"
+          value={form.email}
+          onChange={(email) => setForm((f) => ({ ...f, email }))}
+          placeholder="jugador@correo.com"
+          accent="pink"
+          maxLength={EMAIL_MAX_LENGTH}
+          disabled={pending}
+        />
+        <AuthField
           label="Contraseña"
           type="password"
+          name="password"
+          autoComplete={isRegister ? "new-password" : "current-password"}
           value={form.pass}
           onChange={(pass) => setForm((f) => ({ ...f, pass }))}
           placeholder="••••••••"
           accent="cyan"
+          disabled={pending}
         />
 
         {error && <span className="text-sm text-pink">{error}</span>}
 
-        <NeonButton variant="solid" accent="cyan" size="md" onClick={submit}>
-          {tab === "register" ? "CREAR CUENTA" : "ENTRAR"}
+        <NeonButton
+          type="submit"
+          variant="solid"
+          accent="cyan"
+          size="md"
+          disabled={pending}
+        >
+          {submitLabel}
         </NeonButton>
-      </div>
+      </form>
 
       <div className="flex items-center gap-3 text-[13px] text-placeholder">
         <span className="h-px flex-1 bg-border" />o continúa con
         <span className="h-px flex-1 bg-border" />
       </div>
 
+      {/* Google y GitHub se habilitan con /auth/callback (paso 6 del SPEC 18) */}
       <div className="grid grid-cols-2 gap-2.5">
-        <NeonButton variant="ghost" size="md" onClick={google}>
+        <NeonButton type="button" variant="ghost" size="md" disabled>
           Google
         </NeonButton>
-        <NeonButton variant="ghost" size="md" onClick={github}>
+        <NeonButton type="button" variant="ghost" size="md" disabled>
           GitHub
         </NeonButton>
       </div>
 
-      <NeonButton variant="dashed" accent="yellow" size="md" onClick={guest}>
+      <NeonButton
+        type="button"
+        variant="dashed"
+        accent="yellow"
+        size="md"
+        onClick={guest}
+      >
         JUGAR COMO INVITADO
       </NeonButton>
-      <p className="-mt-2.5 m-0 text-center text-[13px] text-subtle">
-        Sin cuenta: tus puntuaciones no se guardan en el ranking global.
+      <p className="m-0 -mt-2.5 text-center text-[13px] text-subtle">
+        Sin cuenta puedes jugar, pero tus puntuaciones no entran al ranking.
       </p>
-    </div>
+    </AuthPanel>
   );
 }
