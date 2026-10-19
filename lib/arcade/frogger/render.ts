@@ -17,10 +17,12 @@ import {
   TIMER_ROW,
   WIDTH,
 } from "@/lib/arcade/frogger/constants";
+import type { GlowSpriteCache } from "@/lib/arcade/frogger/glow-sprites";
 import {
   turtleState,
   type Entity,
   type Lane,
+  type TurtleState,
 } from "@/lib/arcade/frogger/lanes";
 import type { FroggerSkin } from "@/lib/arcade/frogger/skins";
 
@@ -269,9 +271,8 @@ function drawTurtles(
   skin: FroggerSkin,
   entity: Entity,
   lane: Lane,
-  clock: number,
+  state: TurtleState,
 ): void {
-  const state = turtleState(lane, entity, clock);
   const direction = lane.velocity > 0 ? 1 : -1;
   const centerY = lane.row * CELL + CELL / 2;
   const shell = state === "visible" ? skin.turtle : skin.turtleSinking;
@@ -299,42 +300,70 @@ function drawTurtles(
   clearGlow(ctx);
 }
 
+// Dibuja una entidad de carril según su tipo. La usan el dibujo en vivo y el constructor de sprites con glow.
+export function drawLaneEntity(
+  ctx: CanvasRenderingContext2D,
+  skin: FroggerSkin,
+  entity: Entity,
+  lane: Lane,
+  turtle: TurtleState,
+): void {
+  switch (lane.kind) {
+    case "car":
+      drawCar(ctx, skin, entity, lane, 24);
+      break;
+    case "racer":
+      drawCar(ctx, skin, entity, lane, 18);
+      break;
+    case "tractor":
+      drawTractor(ctx, skin, entity, lane);
+      break;
+    case "truck":
+      drawTruck(ctx, skin, entity, lane);
+      break;
+    case "log":
+      drawLog(ctx, skin, entity, lane);
+      break;
+    case "turtles":
+      drawTurtles(ctx, skin, entity, lane, turtle);
+      break;
+  }
+}
+
 function drawLanes(
   ctx: CanvasRenderingContext2D,
   skin: FroggerSkin,
   lanes: Lane[],
   clock: number,
+  sprites: GlowSpriteCache | null,
 ): void {
   for (const lane of lanes) {
+    const laneSprites = sprites?.lanes[lane.row];
     for (const entity of lane.entities) {
       // Solo las entidades que se ven en pantalla.
       if (entity.x + lane.length * CELL <= 0 || entity.x >= WIDTH) continue;
-      switch (lane.kind) {
-        case "car":
-          drawCar(ctx, skin, entity, lane, 24);
-          break;
-        case "racer":
-          drawCar(ctx, skin, entity, lane, 18);
-          break;
-        case "tractor":
-          drawTractor(ctx, skin, entity, lane);
-          break;
-        case "truck":
-          drawTruck(ctx, skin, entity, lane);
-          break;
-        case "log":
-          drawLog(ctx, skin, entity, lane);
-          break;
-        case "turtles":
-          drawTurtles(ctx, skin, entity, lane, clock);
-          break;
+      const turtle = turtleState(lane, entity, clock);
+      if (laneSprites) {
+        const sprite =
+          turtle === "sinking" && laneSprites.sinking
+            ? laneSprites.sinking
+            : turtle === "submerged" && laneSprites.submerged
+              ? laneSprites.submerged
+              : laneSprites.body;
+        ctx.drawImage(
+          sprite.canvas,
+          Math.round(entity.x) - sprite.pad,
+          lane.row * CELL - sprite.pad,
+        );
+      } else {
+        drawLaneEntity(ctx, skin, entity, lane, turtle);
       }
     }
   }
 }
 
 // Rana: elipse de 28×24 con borde, ojos hacia `facing` y cuatro patas que se separan al saltar.
-function drawFrog(
+export function drawFrog(
   ctx: CanvasRenderingContext2D,
   skin: FroggerSkin,
   x: number,
@@ -389,11 +418,17 @@ function drawOccupiedGoals(
   ctx: CanvasRenderingContext2D,
   skin: FroggerSkin,
   goals: boolean[],
+  sprites: GlowSpriteCache | null,
 ): void {
   for (let index = 0; index < goals.length; index++) {
     if (!goals[index]) continue;
     const centerX = (GOAL_COLS[index] + GOAL_SPAN / 2) * CELL;
-    drawFrog(ctx, skin, centerX - CELL / 2, GOAL_ROW * CELL, "up", false);
+    if (sprites) {
+      const { canvas, pad } = sprites.frogIdle;
+      ctx.drawImage(canvas, centerX - CELL / 2 - pad, GOAL_ROW * CELL - pad);
+    } else {
+      drawFrog(ctx, skin, centerX - CELL / 2, GOAL_ROW * CELL, "up", false);
+    }
   }
 }
 
@@ -459,11 +494,12 @@ export function drawGame(
   ctx: CanvasRenderingContext2D,
   state: RenderState,
   skin: FroggerSkin,
+  sprites: GlowSpriteCache | null,
 ): void {
   clearGlow(ctx);
   drawBackground(ctx, skin);
-  drawLanes(ctx, skin, state.lanes, state.clock);
-  drawOccupiedGoals(ctx, skin, state.goals);
+  drawLanes(ctx, skin, state.lanes, state.clock, sprites);
+  drawOccupiedGoals(ctx, skin, state.goals, sprites);
 
   if (state.phase === "playing") {
     const { frog } = state;

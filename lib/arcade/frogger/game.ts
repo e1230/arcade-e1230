@@ -38,6 +38,7 @@ import {
   moveLanes,
   type Lane,
 } from "@/lib/arcade/frogger/lanes";
+import { createGlowSpriteCache } from "@/lib/arcade/frogger/glow-sprites";
 import {
   drawGame,
   type Facing as Direction,
@@ -148,6 +149,9 @@ export function createFroggerEngine(
     // El canvas visible no cambia de tamaño después de `create`, así que basta fijarlo una vez
     ctx.imageSmoothingEnabled = false;
   }
+
+  // Neón (con glow) dibuja vehículos, troncos, tortugas y ranas de las bocas desde una caché de sprites.
+  const sprites = skin.glow > 0 ? createGlowSpriteCache(skin) : null;
 
   const keyboard = createKeyboard();
 
@@ -404,7 +408,7 @@ export function createFroggerEngine(
       ctx!.drawImage(buffer, 0, 0, WIDTH, HEIGHT);
       return;
     }
-    drawGame(ctx!, updateView(), skin);
+    drawGame(ctx!, updateView(), skin, sprites);
   }
 
   function loop(ts: number): void {
