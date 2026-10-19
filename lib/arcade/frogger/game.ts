@@ -27,6 +27,7 @@ import {
   SCORE_MAX,
   START_COL,
   START_ROW,
+  TURTLE_CYCLE,
   WIDTH,
   tripTime,
 } from "@/lib/arcade/frogger/constants";
@@ -144,6 +145,8 @@ export function createFroggerEngine(
     if (!bufferCtx) {
       throw new Error("No se pudo obtener el contexto 2D del búfer");
     }
+    // El canvas visible no cambia de tamaño después de `create`, así que basta fijarlo una vez
+    ctx.imageSmoothingEnabled = false;
   }
 
   const keyboard = createKeyboard();
@@ -274,8 +277,11 @@ export function createFroggerEngine(
 
   function readInput(): void {
     for (const { direction, codes } of KEY_BINDINGS) {
-      // `some` consume todas las teclas del grupo en el mismo frame.
-      const pressed = codes.map((code) => keyboard.consume(code)).some(Boolean);
+      // Se consumen todas las teclas del grupo en el mismo frame, sin cortocircuitar.
+      let pressed = false;
+      for (const code of codes) {
+        if (keyboard.consume(code)) pressed = true;
+      }
       if (!pressed || state.phase !== "playing") continue;
       if (state.frog.hop) state.pendingHop = direction;
       else startHop(direction);
@@ -343,7 +349,8 @@ export function createFroggerEngine(
   }
 
   function update(dt: number): void {
-    state.clock += dt;
+    // El reloj solo alimenta el ciclo de las tortugas (`turtleState` en lanes.ts)
+    state.clock = (state.clock + dt) % TURTLE_CYCLE;
     moveLanes(state.lanes, dt);
 
     if (state.phase === "playing") {
@@ -361,34 +368,43 @@ export function createFroggerEngine(
     }
   }
 
-  function buildView(): RenderState {
+  // Vista de dibujo reutilizada: se rellena en cada frame y los renderers no la retienen.
+  const view: RenderState = {
+    phase: "playing",
+    lanes: [],
+    goals: [],
+    clock: 0,
+    frog: { x: 0, y: 0, facing: "up", hopping: false },
+    tripFraction: 1,
+    deathTimer: 0,
+    deathX: 0,
+    deathRow: START_ROW,
+  };
+
+  function updateView(): RenderState {
     const { frog } = state;
-    return {
-      phase: state.phase,
-      lanes: state.lanes,
-      goals: state.goals,
-      clock: state.clock,
-      frog: {
-        x: frogDrawX(),
-        y: frogDrawRow() * CELL,
-        facing: frog.facing,
-        hopping: frog.hop !== null,
-      },
-      tripFraction: state.tripLeft / tripTime(state.level),
-      deathTimer: state.deathTimer,
-      deathX: state.deathX,
-      deathRow: state.deathRow,
-    };
+    view.phase = state.phase;
+    view.lanes = state.lanes;
+    view.goals = state.goals;
+    view.clock = state.clock;
+    view.frog.x = frogDrawX();
+    view.frog.y = frogDrawRow() * CELL;
+    view.frog.facing = frog.facing;
+    view.frog.hopping = frog.hop !== null;
+    view.tripFraction = state.tripLeft / tripTime(state.level);
+    view.deathTimer = state.deathTimer;
+    view.deathX = state.deathX;
+    view.deathRow = state.deathRow;
+    return view;
   }
 
   function draw(): void {
     if (buffer && bufferCtx) {
-      drawGamePixels(bufferCtx, buildView(), skin);
-      ctx!.imageSmoothingEnabled = false;
+      drawGamePixels(bufferCtx, updateView(), skin);
       ctx!.drawImage(buffer, 0, 0, WIDTH, HEIGHT);
       return;
     }
-    drawGame(ctx!, buildView(), skin);
+    drawGame(ctx!, updateView(), skin);
   }
 
   function loop(ts: number): void {

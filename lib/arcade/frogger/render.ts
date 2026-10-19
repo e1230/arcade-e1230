@@ -50,6 +50,9 @@ const SPLAT_WIDTH = 4;
 const SPLAT_BLINK = 0.15; // s entre parpadeos de la marca
 const TIMER_BAR_HEIGHT = 12;
 
+export const SAFE_ROWS = [MEDIAN_ROW, START_ROW] as const; // franjas con borde
+const SIGNS = [-1, 1] as const; // patas y ojos de la rana
+
 const FACING_VECTORS: Record<Facing, { x: number; y: number }> = {
   up: { x: 0, y: -1 },
   down: { x: 0, y: 1 },
@@ -101,7 +104,7 @@ function drawBackground(
 
   // Borde de las franjas seguras: una línea arriba y otra abajo de cada una.
   ctx.fillStyle = skin.safeEdge;
-  for (const row of [MEDIAN_ROW, START_ROW]) {
+  for (const row of SAFE_ROWS) {
     ctx.fillRect(0, row * CELL, WIDTH, skin.lineWidth);
     ctx.fillRect(0, (row + 1) * CELL - skin.lineWidth, WIDTH, skin.lineWidth);
   }
@@ -139,6 +142,18 @@ function drawWheel(
   ctx.fillRect(x, y, width, height);
 }
 
+// Dos ruedas en la misma columna: una arriba y otra abajo del cuerpo.
+function drawWheelPair(
+  ctx: CanvasRenderingContext2D,
+  skin: FroggerSkin,
+  wheelX: number,
+  y: number,
+  bodyHeight: number,
+): void {
+  drawWheel(ctx, skin, wheelX, y - 3, 8, 6);
+  drawWheel(ctx, skin, wheelX, y + bodyHeight - 3, 8, 6);
+}
+
 // Coche y bólido: cuerpo centrado en la celda con cuatro ruedas que sobresalen arriba y abajo.
 function drawCar(
   ctx: CanvasRenderingContext2D,
@@ -153,10 +168,8 @@ function drawCar(
   const y = centerY - bodyHeight / 2;
   const color = vehicleColor(lane, skin);
 
-  for (const wheelX of [x + 4, x + width - 12]) {
-    drawWheel(ctx, skin, wheelX, y - 3, 8, 6);
-    drawWheel(ctx, skin, wheelX, y + bodyHeight - 3, 8, 6);
-  }
+  drawWheelPair(ctx, skin, x + 4, y, bodyHeight);
+  drawWheelPair(ctx, skin, x + width - 12, y, bodyHeight);
 
   applyGlow(ctx, skin, color);
   ctx.fillStyle = color;
@@ -209,10 +222,8 @@ function drawTruck(
   const cabX = forward ? x + boxWidth : x;
   const color = vehicleColor(lane, skin);
 
-  for (const wheelX of [boxX + 6, boxX + boxWidth - 14]) {
-    drawWheel(ctx, skin, wheelX, y - 3, 8, 6);
-    drawWheel(ctx, skin, wheelX, y + height - 3, 8, 6);
-  }
+  drawWheelPair(ctx, skin, boxX + 6, y, height);
+  drawWheelPair(ctx, skin, boxX + boxWidth - 14, y, height);
 
   applyGlow(ctx, skin, color);
   ctx.fillStyle = color;
@@ -242,7 +253,8 @@ function drawLog(
   ctx.fill();
   ctx.strokeStyle = skin.logLine;
   ctx.lineWidth = skin.lineWidth;
-  for (const lineY of [y + 10, y + 20]) {
+  for (let vein = 1; vein <= 2; vein++) {
+    const lineY = y + vein * 10;
     ctx.beginPath();
     ctx.moveTo(x + 6, lineY);
     ctx.lineTo(x + width - 6, lineY);
@@ -334,12 +346,13 @@ function drawFrog(
   const centerY = y + CELL / 2;
   const spread = hopping ? 4 : 0;
   const forward = FACING_VECTORS[facing];
-  const side = { x: -forward.y, y: forward.x };
+  const sideX = -forward.y;
+  const sideY = forward.x;
 
   applyGlow(ctx, skin, skin.frog);
   ctx.fillStyle = skin.frogDark;
-  for (const legX of [-1, 1]) {
-    for (const legY of [-1, 1]) {
+  for (const legX of SIGNS) {
+    for (const legY of SIGNS) {
       ctx.fillRect(
         centerX + legX * (11 + spread) - 3,
         centerY + legY * (10 + spread) - 2,
@@ -358,9 +371,9 @@ function drawFrog(
   ctx.stroke();
   clearGlow(ctx);
 
-  for (const sign of [-1, 1]) {
-    const eyeX = centerX + forward.x * 8 + side.x * sign * 6;
-    const eyeY = centerY + forward.y * 8 + side.y * sign * 6;
+  for (const sign of SIGNS) {
+    const eyeX = centerX + forward.x * 8 + sideX * sign * 6;
+    const eyeY = centerY + forward.y * 8 + sideY * sign * 6;
     ctx.fillStyle = skin.eye;
     ctx.beginPath();
     ctx.arc(eyeX, eyeY, 2.5, 0, Math.PI * 2);
@@ -377,11 +390,11 @@ function drawOccupiedGoals(
   skin: FroggerSkin,
   goals: boolean[],
 ): void {
-  goals.forEach((occupied, index) => {
-    if (!occupied) return;
+  for (let index = 0; index < goals.length; index++) {
+    if (!goals[index]) continue;
     const centerX = (GOAL_COLS[index] + GOAL_SPAN / 2) * CELL;
     drawFrog(ctx, skin, centerX - CELL / 2, GOAL_ROW * CELL, "up", false);
-  });
+  }
 }
 
 // Marca de choque: una «X» en la celda donde murió la rana.

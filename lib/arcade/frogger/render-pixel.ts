@@ -24,6 +24,7 @@ import {
   type Lane,
 } from "@/lib/arcade/frogger/lanes";
 import {
+  SAFE_ROWS,
   splatVisible,
   timerColor,
   type Facing,
@@ -224,7 +225,7 @@ function drawTerrain(
 
   // Franjas seguras: una línea en la primera y la última fila lógica de la celda.
   ctx.fillStyle = skin.safeEdge;
-  for (const row of [MEDIAN_ROW, START_ROW]) {
+  for (const row of SAFE_ROWS) {
     ctx.fillRect(0, row * TILE, width, 1);
     ctx.fillRect(0, row * TILE + TILE - 1, width, 1);
   }
@@ -335,11 +336,11 @@ export function drawGamePixels(
   drawTerrain(ctx, skin, width, height);
   drawLanes(ctx, skin, state.lanes, state.clock);
 
-  state.goals.forEach((occupied, index) => {
-    if (!occupied) return;
+  for (let index = 0; index < state.goals.length; index++) {
+    if (!state.goals[index]) continue;
     const centerX = (GOAL_COLS[index] + GOAL_SPAN / 2) * TILE;
     drawSprite(ctx, skin, FROG_IDLE, centerX - TILE / 2, GOAL_ROW * TILE);
-  });
+  }
 
   if (state.phase === "playing") {
     const { frog } = state;
