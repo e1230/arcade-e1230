@@ -24,6 +24,7 @@ import {
   type Lane,
 } from "@/lib/arcade/frogger/lanes";
 import {
+  SAFE_ROWS,
   splatVisible,
   timerColor,
   type Facing,
@@ -199,7 +200,7 @@ function fillRows(
   ctx.fillRect(0, firstRow * TILE, width, (lastRow - firstRow + 1) * TILE);
 }
 
-function drawTerrain(
+export function drawTerrain(
   ctx: CanvasRenderingContext2D,
   skin: FroggerSkin,
   width: number,
@@ -224,7 +225,7 @@ function drawTerrain(
 
   // Franjas seguras: una línea en la primera y la última fila lógica de la celda.
   ctx.fillStyle = skin.safeEdge;
-  for (const row of [MEDIAN_ROW, START_ROW]) {
+  for (const row of SAFE_ROWS) {
     ctx.fillRect(0, row * TILE, width, 1);
     ctx.fillRect(0, row * TILE + TILE - 1, width, 1);
   }
@@ -324,22 +325,36 @@ function drawLanes(
   }
 }
 
+// El terreno solo depende de la skin, así que se dibuja una vez en una capa del tamaño del búfer.
+export function createTerrainLayer(skin: FroggerSkin): HTMLCanvasElement {
+  const width = WIDTH / skin.pixelScale;
+  const height = HEIGHT / skin.pixelScale;
+  const layer = document.createElement("canvas");
+  layer.width = width;
+  layer.height = height;
+  const layerCtx = layer.getContext("2d");
+  if (!layerCtx) {
+    throw new Error("No se pudo obtener el contexto 2D de la capa de terreno");
+  }
+  drawTerrain(layerCtx, skin, width, height);
+  return layer;
+}
+
 export function drawGamePixels(
   ctx: CanvasRenderingContext2D,
   state: RenderState,
   skin: FroggerSkin,
+  terrain: HTMLCanvasElement,
 ): void {
-  const width = WIDTH / skin.pixelScale;
-  const height = HEIGHT / skin.pixelScale;
-
-  drawTerrain(ctx, skin, width, height);
+  // La capa es opaca y cubre todo el búfer, así que no hace falta limpiarlo
+  ctx.drawImage(terrain, 0, 0);
   drawLanes(ctx, skin, state.lanes, state.clock);
 
-  state.goals.forEach((occupied, index) => {
-    if (!occupied) return;
+  for (let index = 0; index < state.goals.length; index++) {
+    if (!state.goals[index]) continue;
     const centerX = (GOAL_COLS[index] + GOAL_SPAN / 2) * TILE;
     drawSprite(ctx, skin, FROG_IDLE, centerX - TILE / 2, GOAL_ROW * TILE);
-  });
+  }
 
   if (state.phase === "playing") {
     const { frog } = state;
@@ -367,7 +382,7 @@ export function drawGamePixels(
   ctx.fillRect(
     0,
     TIMER_ROW * TILE + (TILE - TIMER_BAR_HEIGHT) / 2,
-    Math.floor(fraction * width),
+    Math.floor(fraction * (WIDTH / skin.pixelScale)),
     TIMER_BAR_HEIGHT,
   );
 }

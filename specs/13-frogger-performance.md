@@ -1,6 +1,6 @@
 # SPEC 13 — Rendimiento de FROGGER
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 11 (`specs/11-frogger-game.md`), SPEC 12 (`specs/12-frogger-skins.md`)
 > **Fecha:** 2026-10-12
 > **Objetivo:** Que FROGGER cumpla el presupuesto de rendimiento en todas sus skins (Clásico, Neón y Retro), sin cambiar su jugabilidad ni su look, eliminando el loop que sigue dibujando debajo del modal de fin de partida, los ~94 dibujos con `shadowBlur` por frame de Neón y el redibujo del terreno estático de Retro, y limpiando las asignaciones por frame.
