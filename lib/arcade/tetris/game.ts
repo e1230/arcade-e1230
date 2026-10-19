@@ -38,6 +38,7 @@ import {
   type PieceType,
 } from "@/lib/arcade/tetris/pieces";
 import {
+  createPieceSprites,
   drawBoard,
   drawGhost,
   drawPanel,
@@ -84,6 +85,7 @@ export function createTetrisEngine(
   const ctx: CanvasRenderingContext2D = context2d;
 
   const keyboard = createKeyboard();
+  const sprites = createPieceSprites(); // una vez: el glow de la pieza activa va horneado
 
   let state: TetrisState = createInitialState();
   let rafId: number | null = null;
@@ -266,7 +268,7 @@ export function createTetrisEngine(
     if (state.phase === "playing") {
       drawGhost(ctx, state.current, ghostY(state.board, state.current));
     }
-    drawPiece(ctx, state.current);
+    drawPiece(ctx, state.current, sprites);
     drawPanel(ctx, state.next, state.lines);
   }
 
