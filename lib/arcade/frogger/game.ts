@@ -396,6 +396,11 @@ export function createFroggerEngine(
     lastTime = ts;
     update(dt);
     draw();
+    // Tras el fin de partida no hay nada que animar: el último frame queda bajo el modal
+    if (state.phase === "gameover") {
+      rafId = null;
+      return;
+    }
     rafId = requestAnimationFrame(loop);
   }
 
@@ -426,8 +431,9 @@ export function createFroggerEngine(
     },
     resume() {
       if (destroyed) return;
-      // Tras el fin de partida el teclado queda suelto, para que Espacio active los botones del modal
-      if (state.phase !== "gameover") keyboard.attach();
+      // Tras el fin de partida el loop ya terminó, el teclado queda suelto (para que Espacio active los botones del modal) y el canvas conserva el último frame
+      if (state.phase === "gameover") return;
+      keyboard.attach();
       lastTime = null;
       stopLoop();
       rafId = requestAnimationFrame(loop);
