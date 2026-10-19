@@ -22,7 +22,7 @@ Con este spec cada jugador tiene una cuenta y un alias único que no puede false
 - **Tabla `profiles`** con un alias único por cuenta (3 a 14 caracteres, `A-Z`, `0-9` y `_`, guardado en mayúsculas), que no se puede cambiar.
 - **Alias al registrarse:** el formulario CREAR CUENTA lo pide, y un trigger crea el perfil con él.
 - **Pantalla «ELIGE TU ALIAS»** (`/onboarding`) para las cuentas sin alias (OAuth, o un registro cuyo alias se tomó en el último segundo). `/auth/callback` lleva ahí tras el primer login con Google o GitHub. El jugador puede saltarla y navegar, pero no guarda puntuaciones hasta elegirlo.
-- **Recuperación de contraseña:** enlace «¿Olvidaste tu contraseña?», página `/auth/forgot`, correo de Supabase con el SMTP por defecto, ruta `/auth/confirm` que verifica el enlace y página `/auth/reset` para elegir la nueva.
+- **Recuperación de contraseña:** enlace «¿Olvidaste tu contraseña?», página `/auth/forgot`, correo de Supabase con el SMTP y la plantilla por defecto, `/auth/callback` canjea el código del enlace y página `/auth/reset` para elegir la nueva.
 - **Cerrar sesión** desde la Navbar y el menú móvil, sin salir de la página actual.
 - **Sesión en el servidor:** el layout raíz lee el usuario y su perfil, y un `SessionProvider` cliente los reparte a la Navbar, el Reproductor y los rankings, sin parpadeo de «INICIAR SESIÓN».
 - **Redirección con `?next=`:** los enlaces a `/login` desde el Salón de la Fama y el modal de fin de partida llevan la ruta de vuelta. Solo se aceptan rutas internas, y sin `next` se vuelve al Home. Con sesión, `/login` redirige directamente.
@@ -57,8 +57,7 @@ app/
   login/page.tsx                    (cambia) redirige si hay sesión; pasa next y error a AuthCard
   onboarding/page.tsx               (nuevo) «ELIGE TU ALIAS»; sin sesión → /login, con alias → next
   auth/actions.ts                   (nuevo) Server Actions de autenticación
-  auth/callback/route.ts            (nuevo) GET: canjea el código OAuth por la sesión
-  auth/confirm/route.ts             (nuevo) GET: verifica el token_hash del correo de recuperación
+  auth/callback/route.ts            (nuevo) GET: canjea el código OAuth o de recuperación por la sesión
   auth/forgot/page.tsx              (nuevo) pide el correo para recuperar la contraseña
   auth/reset/page.tsx               (nuevo) nueva contraseña; sin sesión → /login?error=link
 lib/
@@ -105,16 +104,17 @@ Convenciones:
 
 El MCP de Supabase no configura Auth, así que el paso 1 del plan lo hace el usuario en los paneles:
 
-| Dónde                                                   | Qué                                                                                                                                                                    |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Supabase → Authentication → Sign In / Providers → Email | Email activado. **Confirm email desactivado.** Longitud mínima de contraseña: **8**.                                                                                   |
-| Supabase → Authentication → URL Configuration           | Site URL: `http://localhost:3000`. Redirect URLs: `http://localhost:3000/**`.                                                                                          |
-| Google Cloud → APIs & Services → Credentials            | Cliente OAuth «Aplicación web» con la URI de redirección `https://xanuntuhanyubcqiudlp.supabase.co/auth/v1/callback`.                                                  |
-| GitHub → Settings → Developer settings → OAuth Apps     | App con Authorization callback URL `https://xanuntuhanyubcqiudlp.supabase.co/auth/v1/callback`.                                                                        |
-| Supabase → Authentication → Sign In / Providers         | Google y GitHub activados, con el Client ID y el Client Secret de cada app.                                                                                            |
-| Supabase → Authentication → Emails → Reset Password     | El enlace del correo pasa a `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/auth/reset`. Asunto y texto en español con la voz del arcade. |
+| Dónde                                                   | Qué                                                                                                                   |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Supabase → Authentication → Sign In / Providers → Email | Email activado. **Confirm email desactivado.** Longitud mínima de contraseña: **8**.                                  |
+| Supabase → Authentication → URL Configuration           | Site URL: `http://localhost:3000`. Redirect URLs: `http://localhost:3000/**`.                                         |
+| Google Cloud → APIs & Services → Credentials            | Cliente OAuth «Aplicación web» con la URI de redirección `https://xanuntuhanyubcqiudlp.supabase.co/auth/v1/callback`. |
+| GitHub → Settings → Developer settings → OAuth Apps     | App con Authorization callback URL `https://xanuntuhanyubcqiudlp.supabase.co/auth/v1/callback`.                       |
+| Supabase → Authentication → Sign In / Providers         | Google y GitHub activados, con el Client ID y el Client Secret de cada app.                                           |
 
 Cuando haya un dominio de producción, se agrega a Redirect URLs y Site URL pasa a ser ese dominio.
+
+La plantilla «Reset Password» queda por defecto, en inglés: con el SMTP de Supabase el panel no deja editarla («Set up custom SMTP to edit templates»). Su enlace `{{ .ConfirmationURL }}` termina en el `redirectTo` de `requestPasswordReset` con un `code` de PKCE.
 
 ## Modelo de datos
 
@@ -317,7 +317,7 @@ export async function signOut(): Promise<void>;
 
 - Google y GitHub se inician desde el navegador con `supabase.auth.signInWithOAuth({ provider, options: { redirectTo: origin + "/auth/callback?next=…" } })`. El verificador PKCE queda en una cookie del navegador.
 - `GET /auth/callback?code&next` canjea el código con `exchangeCodeForSession`. Sin perfil, redirige a `/onboarding?next=…`. Con perfil, redirige a `safeNextPath(next)`. Si no hay código o el canje falla, redirige a `/login?error=oauth`.
-- `GET /auth/confirm?token_hash&type&next` llama a `verifyOtp({ type, token_hash })` y redirige a `safeNextPath(next)`. Solo acepta `type=recovery`. Si falla, redirige a `/login?error=link`.
+- La recuperación usa la misma ruta. `requestPasswordReset` llama a `resetPasswordForEmail` con `redirectTo: origin + "/auth/callback?type=recovery&next=/auth/reset"`, y el verificador PKCE queda en una cookie que escribe la Server Action. Con `type=recovery`, `/auth/callback` redirige a `next` sin revisar el perfil, y si el canje falla, a `/login?error=link`.
 - `/login` traduce `?error=oauth` a «No pudimos iniciar sesión con ese proveedor. Intenta de nuevo.» y `?error=link` a «El enlace no es válido o ya expiró. Pide uno nuevo.».
 
 ### Pantallas
@@ -361,7 +361,7 @@ type SaveMode = "save" | "login" | "alias";
 5. **Sesión real.** Crear `lib/session-server.ts` y `components/auth/SessionProvider.tsx`, reescribir `lib/session.ts` y hacer async el layout raíz. Adaptar la Navbar, el menú móvil, `PlayingAs`, `DetailLeaderboard`, `HallOfFameView`, `HallOfFameTable` y `PlayerView` al nuevo `SessionUser`. Mientras no exista el paso 7, `PlayerView` sigue guardando con `getPlayerName(user)`. Extraer `AuthPanel` y conectar las pestañas de correo y contraseña de `AuthCard` a las acciones. JUGAR COMO INVITADO navega sin crear sesión, y Google y GitHub quedan deshabilitados. Eliminar `STORAGE_KEYS.user`. Verificación: crear la cuenta `PRUEBA_1`, ver el alias en la Navbar, recargar y seguir con sesión, cerrar sesión y volver a entrar.
 6. **Google, GitHub y alias.** Habilitar los botones con `signInWithOAuth`, crear `/auth/callback`, `/onboarding` y `AliasForm`, y mostrar «ELIGE TU ALIAS» en la Navbar y el menú móvil. Verificación: el primer login con GitHub lleva a `/onboarding`; elegir un alias vuelve a `next`; «Ahora no» deja navegar con el avatar `?`.
 7. **Puntuaciones ligadas a la cuenta.** Aplicar `link_scores_to_profiles` y regenerar los tipos. En el mismo paso, cambiar `insertScore` y `fetchPersonalBest` y agregar `SaveMode` a `PlayerView` y `GameOverModal`. Verificación con `execute_sql`: bajo `set role anon` el insert en `scores` falla. Con una cuenta, una partida de SNAKE guardada aparece en `/games/snake` con su alias y resaltada.
-8. **Recuperación de contraseña.** Agregar `requestPasswordReset` y `updatePassword`, crear `/auth/forgot`, `/auth/confirm`, `/auth/reset`, `ForgotPasswordForm` y `ResetPasswordForm`, y el enlace «¿Olvidaste tu contraseña?». Verificación: pedir el enlace para la cuenta de prueba, abrirlo, elegir una contraseña nueva y entrar con ella.
+8. **Recuperación de contraseña.** Agregar `requestPasswordReset` y `updatePassword`, el caso `type=recovery` de `/auth/callback`, crear `/auth/forgot`, `/auth/reset`, `ForgotPasswordForm` y `ResetPasswordForm`, y el enlace «¿Olvidaste tu contraseña?». Verificación: pedir el enlace para la cuenta de prueba, abrirlo, elegir una contraseña nueva y entrar con ella.
 9. **Redirecciones y errores de `/login`.** `/login` redirige si ya hay sesión, pasa `next` a todos los flujos y muestra `?error=oauth` y `?error=link`. Los enlaces del Salón de la Fama y del modal llevan `?next=`. Verificación: desde el modal de fin de partida de un invitado, iniciar sesión vuelve a `/games/<id>/play`.
 10. **Documentación.** Actualizar `CLAUDE.md`: el párrafo de «Proyecto» (SPEC 18), las rutas nuevas, la estructura (`components/auth/`, `lib/auth.ts`, `lib/safe-next.ts`, `lib/session-server.ts`, `app/auth/`), la persistencia simulada (queda solo `e1230_skins`), la frase sobre el código de servidor y el esquema (`profiles`, `scores.user_id` y sus triggers) en «Notas del stack». Actualizar el comentario de `lib/supabase/proxy.ts`. Verificación: `npm run format:check` pasa.
 
@@ -404,7 +404,7 @@ type SaveMode = "save" | "login" | "alias";
 
 - [ ] «¿Olvidaste tu contraseña?» lleva a `/auth/forgot`.
 - [ ] Pedir el enlace con un correo registrado y con uno no registrado muestra el mismo mensaje.
-- [ ] El enlace del correo pasa por `/auth/confirm` y termina en `/auth/reset` con sesión.
+- [ ] El enlace del correo, abierto en el mismo navegador, pasa por `/auth/callback` y termina en `/auth/reset` con sesión.
 - [ ] Guardar una contraseña nueva de 8 o más caracteres permite entrar con ella y ya no con la anterior.
 - [ ] Contraseñas que no coinciden en `/auth/reset` muestran un aviso y no se envían.
 - [ ] Un enlace ya usado o alterado termina en `/login` con «El enlace no es válido o ya expiró. Pide uno nuevo.».
@@ -448,8 +448,9 @@ type SaveMode = "save" | "login" | "alias";
 - **Sí:** comprobar el alias antes de `auth.signUp`. Da el mensaje claro en el caso normal. La carrera entre dos registros simultáneos la resuelve el `on conflict` del trigger.
 - **Sí:** sin confirmación de correo. Lo eligió el usuario. El SMTP por defecto de Supabase envía pocos correos por hora, y Resend no tiene dominio verificado.
 - **Sí:** recuperación de contraseña en este spec, con el SMTP por defecto de Supabase. Lo eligió el usuario. Se acepta su límite de envíos como riesgo.
-- **Sí:** enlace de recuperación con `token_hash` y `/auth/confirm` (`verifyOtp`). Funciona aunque el correo se abra en otro navegador o dispositivo.
-- **No:** enlace de recuperación con `code` de PKCE. Solo funciona en el navegador donde se pidió, porque el verificador vive en sus cookies.
+- **Sí:** enlace de recuperación con `code` de PKCE, canjeado en `/auth/callback`. Lo eligió el usuario durante la implementación. Es lo único posible con la plantilla por defecto, que no se puede editar sin SMTP propio.
+- **No:** enlace con `token_hash` y una ruta `/auth/confirm` (`verifyOtp`). Funcionaría en cualquier navegador, pero exige editar la plantilla y, por tanto, un SMTP propio. Vuelve con el spec de SMTP.
+- **No:** Resend como SMTP para poder editar la plantilla. Sin dominio verificado solo llega al correo de la cuenta de Resend.
 - **Sí:** `requestPasswordReset` responde lo mismo exista o no la cuenta. No revela qué correos están registrados.
 - **Sí:** contraseña de mínimo 8 caracteres. Lo eligió el usuario. Se fija en Supabase y se valida igual en el formulario.
 - **Sí:** el invitado es simplemente no tener sesión. Lo eligió el usuario. Desaparece `SessionUser.guest`.
@@ -472,15 +473,15 @@ type SaveMode = "save" | "login" | "alias";
 
 ## Riesgos
 
-| Riesgo                                                                                                                                                                   | Mitigación                                                                                                                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| El SMTP por defecto de Supabase envía pocos correos por hora: la recuperación puede fallar con varios pedidos seguidos.                                                  | La acción traduce `over_email_send_rate_limit` a «Demasiados intentos…». El SMTP propio va en otro spec.                                                                    |
-| Sin confirmación de correo, alguien puede registrarse con el correo de otra persona. Si esa persona entra después con Google, Supabase puede vincular ambas identidades. | Se acepta mientras no haya confirmación de correo. Va como motivo principal del spec de confirmación. La recuperación de contraseña permite a la víctima retomar la cuenta. |
-| Una app OAuth mal configurada (URI de redirección distinta) deja los botones sin funcionar.                                                                              | El paso 1 fija la URI exacta, y `/auth/callback` cae en `/login?error=oauth` con un mensaje en lugar de romperse.                                                           |
-| Cuentas OAuth que nunca eligen alias.                                                                                                                                    | Pueden jugar, pero no guardar. La Navbar y el modal les recuerdan elegirlo.                                                                                                 |
-| Alias ofensivos.                                                                                                                                                         | La regex limita los caracteres. Se pueden borrar perfiles desde el panel de Supabase, y la moderación va en otro spec.                                                      |
-| El layout async con cookies hace que todas las páginas se rendericen por petición y consulten `profiles`.                                                                | `fetchSessionUser` usa `cache()` (una consulta por petición), y sin cookie de sesión `getClaims` no hace ninguna petición de red.                                           |
-| La plantilla del correo de recuperación queda con el enlace por defecto (`code`) y `/auth/confirm` no recibe `token_hash`.                                               | El paso 1 incluye la plantilla, y el criterio de aceptación de recuperación la verifica de punta a punta.                                                                   |
+| Riesgo                                                                                                                                                                   | Mitigación                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| El SMTP por defecto de Supabase envía pocos correos por hora: la recuperación puede fallar con varios pedidos seguidos.                                                  | La acción traduce `over_email_send_rate_limit` a «Demasiados intentos…». El SMTP propio va en otro spec.                                                                                                    |
+| Sin confirmación de correo, alguien puede registrarse con el correo de otra persona. Si esa persona entra después con Google, Supabase puede vincular ambas identidades. | Se acepta mientras no haya confirmación de correo. Va como motivo principal del spec de confirmación. La recuperación de contraseña permite a la víctima retomar la cuenta.                                 |
+| Una app OAuth mal configurada (URI de redirección distinta) deja los botones sin funcionar.                                                                              | El paso 1 fija la URI exacta, y `/auth/callback` cae en `/login?error=oauth` con un mensaje en lugar de romperse.                                                                                           |
+| Cuentas OAuth que nunca eligen alias.                                                                                                                                    | Pueden jugar, pero no guardar. La Navbar y el modal les recuerdan elegirlo.                                                                                                                                 |
+| Alias ofensivos.                                                                                                                                                         | La regex limita los caracteres. Se pueden borrar perfiles desde el panel de Supabase, y la moderación va en otro spec.                                                                                      |
+| El layout async con cookies hace que todas las páginas se rendericen por petición y consulten `profiles`.                                                                | `fetchSessionUser` usa `cache()` (una consulta por petición), y sin cookie de sesión `getClaims` no hace ninguna petición de red.                                                                           |
+| El enlace de recuperación solo funciona en el navegador donde se pidió (el verificador PKCE vive en sus cookies), y el correo llega en inglés.                           | Si se abre en otro navegador, `/auth/callback` cae en `/login?error=link` con «El enlace no es válido o ya expiró. Pide uno nuevo.». El `token_hash` y la plantilla en español vuelven con el spec de SMTP. |
 
 ## Lo que **no** entra en este spec
 
