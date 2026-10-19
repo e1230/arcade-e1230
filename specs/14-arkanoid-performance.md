@@ -1,6 +1,6 @@
 # SPEC 14 — Rendimiento de ARKANOID
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 08 (`specs/08-arkanoid-game.md`)
 > **Fecha:** 2026-10-12
 > **Objetivo:** Que ARKANOID cumpla el presupuesto de rendimiento (no tiene skins: una sola pasada), sin cambiar su jugabilidad, su sonido ni su look, eliminando el loop que sigue dibujando debajo del modal de fin de partida y limpiando las asignaciones por frame de las explosiones.
@@ -272,38 +272,38 @@ En `references/game-performance.md`: `arkanoid` pasa a `[x]` con la medición fi
 
 ### Generales
 
-- [ ] `npx tsc --noEmit` sin errores.
-- [ ] `npm run lint` sin errores.
-- [ ] `git diff main -- public/ references/` solo muestra `references/game-performance.md`.
-- [ ] Ningún otro motor cambia (`git diff main --stat` solo muestra `lib/arcade/arkanoid/game.ts`, `lib/arcade/arkanoid/sprites.ts`, este spec y `references/game-performance.md`).
-- [ ] `sound.ts`, `constants.ts` y `levels.ts` sin cambios.
+- [x] `npx tsc --noEmit` sin errores.
+- [x] `npm run lint` sin errores.
+- [x] `git diff main -- public/ references/` solo muestra `references/game-performance.md`.
+- [x] Ningún otro motor cambia (`git diff main --stat` solo muestra `lib/arcade/arkanoid/game.ts`, `lib/arcade/arkanoid/sprites.ts`, este spec y `references/game-performance.md`).
+- [x] `sound.ts`, `constants.ts` y `levels.ts` sin cambios.
 
 ### Rendimiento (única pasada; medido con los scripts de `game-performance-booster`, `npm run dev`)
 
-- [ ] Frame p95 sin estrangular: 17,4 ms → ≤ 20 ms.
-- [ ] Frames > 33 ms: 0 % → < 1 %.
-- [ ] Frame p95 con CPU ×4: 17,5 ms → ≤ 33 ms.
-- [ ] Glow/frame: 0 → ≤ 10 (sin `shadowBlur`).
-- [ ] Dibujos por frame tras `onGameOver` (modal visible, ≥ 1 s después del último frame): 56,47 → **0**.
-- [ ] Dibujos por frame en pausa: 0 → 0.
-- [ ] Mutaciones del DOM: 0,63/s → ≤ 10/s.
-- [ ] `getImageData`, `createLinearGradient`/`Radial`/`Pattern`, `new Image`, `new Audio` por frame: 0 → 0.
-- [ ] Dibujos por frame en juego normal con el mismo tablero: sin cambio (62,13 con el tablero completo del nivel 1).
-- [ ] Heap tras 60 s de partida: sin crecimiento sostenido (+0,4 MB entre 10 s y 60 s → ≤ 5 MB).
-- [ ] JS del `loop` de 0,034 ms de media: no sube más de 0,02 ms.
-- [ ] Sonidos: la misma cantidad de `play()` por evento (un clon por rebote y uno por bloque roto) en una ventana comparable.
+- [x] Frame p95 sin estrangular: 17,4 ms → ≤ 20 ms.
+- [x] Frames > 33 ms: 0 % → < 1 %.
+- [x] Frame p95 con CPU ×4: 17,5 ms → ≤ 33 ms.
+- [x] Glow/frame: 0 → ≤ 10 (sin `shadowBlur`).
+- [x] Dibujos por frame tras `onGameOver` (modal visible, ≥ 1 s después del último frame): 56,47 → **0**.
+- [x] Dibujos por frame en pausa: 0 → 0.
+- [x] Mutaciones del DOM: 0,63/s → ≤ 10/s.
+- [x] `getImageData`, `createLinearGradient`/`Radial`/`Pattern`, `new Image`, `new Audio` por frame: 0 → 0.
+- [x] Dibujos por frame en juego normal con el mismo tablero: sin cambio (62,13 con el tablero completo del nivel 1).
+- [x] Heap tras 60 s de partida: sin crecimiento sostenido (+0,4 MB entre 10 s y 60 s → ≤ 5 MB).
+- [x] JS del `loop` de 0,034 ms de media: no sube más de 0,02 ms.
+- [x] Sonidos: la misma cantidad de `play()` por evento (un clon por rebote y uno por bloque roto) en una ventana comparable.
 
 ### Pausa y fin
 
 - [ ] P y SEGUIR pausan y reanudan sin salto de la bola ni de la paleta; en pausa 0 dibujos por frame.
 - [ ] Tras perder la última vida: la explosión pendiente (si la hay) termina de animarse, el modal «FIN DEL JUEGO» aparece y 0 dibujos por frame después.
 - [ ] Tras romper el último bloque del nivel 5 («win»): la última explosión se anima, el modal aparece y 0 dibujos por frame después.
-- [ ] Ganar o perder con el Reproductor pausado por pérdida de foco no deja el loop vivo ni dibuja al volver.
-- [ ] JUGAR DE NUEVO arranca una partida limpia (puntuación 0, 3 vidas, nivel 1, loop de nuevo vivo, canvas dibujándose).
+- [x] Ganar o perder con el Reproductor pausado por pérdida de foco no deja el loop vivo ni dibuja al volver.
+- [x] JUGAR DE NUEVO arranca una partida limpia (puntuación 0, 3 vidas, nivel 1, loop de nuevo vivo, canvas dibujándose).
 
 ### Sin regresiones visuales
 
-- [ ] El tablero del nivel 1 se ve igual que `.playwright-screenshots/performance/arkanoid/base.png` (bloques, paleta, bola y fondo).
+- [x] El tablero del nivel 1 se ve igual que `.playwright-screenshots/performance/arkanoid/base.png` (bloques, paleta, bola y fondo).
 - [ ] Las explosiones de cada color (incluido gris, que usa los cuadros del rojo) se ven iguales que antes.
 
 ### Sin regresiones de juego
@@ -312,6 +312,10 @@ En `references/game-performance.md`: `arkanoid` pasa a `[x]` con la medición fi
 - [ ] La bola rebota igual en paredes, techo, paleta y bloques; un solo bloque por frame.
 - [ ] Mismo comportamiento del teclado (← →, Espacio para sacar tras perder una vida, P) y del mouse (la paleta sigue al cursor).
 - [ ] Los sonidos de rebote y rotura suenan igual; pausa, fin de partida y salida los detienen.
+
+### Verificación (2026-10-19)
+
+Medición final con `npm run dev` y Playwright; los números están en `references/game-performance.md`, sección `arkanoid`. Quedan sin marcar los criterios que el autopiloto no cubre y que se comprueban jugando a mano: salto de la bola y la paleta al reanudar, explosión pendiente al perder la última vida, victoria del nivel 5, explosión gris/roja (fila 176) y las regresiones de juego (avance de nivel ×1,46, rebotes, teclado y sonidos). La lógica de esos caminos no cambió salvo `isIdle()`, `updateExplosions`, `breakBlocks` y `EXPLOSION_RECTS`.
 
 ## Decisiones
 
