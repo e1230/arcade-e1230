@@ -349,11 +349,21 @@ export function createSnakeEngine(
     drawHead(state.snake[0]);
   }
 
+  // La partida terminó: el motor ya no cambia nada que mostrar
+  function isFinished(): boolean {
+    return state.phase === "gameover" || state.phase === "win";
+  }
+
   function loop(ts: number): void {
     const dt = lastTime === null ? 0 : Math.min((ts - lastTime) / 1000, MAX_DT);
     lastTime = ts;
     update(dt);
     draw();
+    // Tras el último frame de la partida no se pide otro: el modal tapa el canvas
+    if (isFinished()) {
+      rafId = null;
+      return;
+    }
     rafId = requestAnimationFrame(loop);
   }
 
@@ -383,10 +393,10 @@ export function createSnakeEngine(
     },
     resume() {
       if (destroyed) return;
-      // Tras el fin de partida el teclado queda suelto, para que Espacio active los botones del modal
-      if (state.phase !== "gameover" && state.phase !== "win") {
-        keyboard.attach();
-      }
+      // Tras el fin de partida no hay nada que redibujar y el teclado queda suelto
+      // para que Espacio active los botones del modal
+      if (isFinished()) return;
+      keyboard.attach();
       lastTime = null;
       stopLoop();
       rafId = requestAnimationFrame(loop);
