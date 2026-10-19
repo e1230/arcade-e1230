@@ -42,6 +42,21 @@ const EXPLOSION_SY: Record<BlockColor, number> = {
   hotpink: 256,
 };
 
+// Recortes de explosión por color y cuadro, calculados una vez al cargar el módulo
+function buildExplosionRects(): Record<BlockColor, Rect[]> {
+  const result = {} as Record<BlockColor, Rect[]>;
+  for (const color of Object.keys(EXPLOSION_SY) as BlockColor[]) {
+    result[color] = EXPLOSION_SX.map((sx) => ({
+      sx,
+      sy: EXPLOSION_SY[color],
+      ...EXPLOSION_SIZE,
+    }));
+  }
+  return result;
+}
+
+const EXPLOSION_RECTS = buildExplosionRects();
+
 export interface Sprites {
   isReady(): boolean; // false hasta que carga la imagen
   drawBlock(
@@ -108,18 +123,7 @@ export function loadSprites(): Sprites {
     drawBlock: (ctx, color, x, y, w, h) => draw(ctx, BLOCKS[color], x, y, w, h),
     drawExplosion: (ctx, color, frame, x, y, w, h) => {
       const index = Math.max(0, Math.min(EXPLOSION_FRAME_COUNT - 1, frame));
-      draw(
-        ctx,
-        {
-          sx: EXPLOSION_SX[index],
-          sy: EXPLOSION_SY[color],
-          ...EXPLOSION_SIZE,
-        },
-        x,
-        y,
-        w,
-        h,
-      );
+      draw(ctx, EXPLOSION_RECTS[color][index], x, y, w, h);
     },
     drawPaddle: (ctx, x, y, w, h) => draw(ctx, PADDLE, x, y, w, h),
     drawBall: (ctx, x, y, w, h) => draw(ctx, BALL, x, y, w, h),

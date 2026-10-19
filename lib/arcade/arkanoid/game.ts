@@ -204,9 +204,13 @@ export function createArkanoidEngine(
 
   // Rompe como máximo un bloque por frame. Devuelve true si terminó la partida.
   function breakBlocks(): boolean {
-    const hit = state.blocks.find(
-      (block) => block.alive && overlapsBall(block),
-    );
+    let hit: Block | null = null;
+    for (const block of state.blocks) {
+      if (block.alive && overlapsBall(block)) {
+        hit = block;
+        break;
+      }
+    }
     if (!hit) return false;
 
     hit.alive = false;
@@ -232,10 +236,14 @@ export function createArkanoidEngine(
   }
 
   function updateExplosions(dt: number): void {
-    for (const explosion of state.explosions) explosion.elapsed += dt;
-    state.explosions = state.explosions.filter(
-      (explosion) => explosion.elapsed < EXPLOSION_DURATION,
-    );
+    const list = state.explosions;
+    let kept = 0;
+    for (let i = 0; i < list.length; i++) {
+      const explosion = list[i];
+      explosion.elapsed += dt;
+      if (explosion.elapsed < EXPLOSION_DURATION) list[kept++] = explosion;
+    }
+    list.length = kept;
   }
 
   // Devuelve true si terminó la partida.
@@ -323,11 +331,21 @@ export function createArkanoidEngine(
     sprites.drawBall(ctx!, state.ball.x, state.ball.y, BALL_SIZE, BALL_SIZE);
   }
 
+  // Sin animaciones pendientes tras el fin de partida: el canvas queda con su último frame
+  function isIdle(): boolean {
+    return state.phase !== "playing" && state.explosions.length === 0;
+  }
+
   function loop(ts: number): void {
     const dt = lastTime === null ? 0 : Math.min((ts - lastTime) / 1000, MAX_DT);
     lastTime = ts;
     update(dt);
     draw();
+    // Tras el último frame no se vuelve a pedir otro: el modal tapa el canvas
+    if (isIdle()) {
+      rafId = null;
+      return;
+    }
     rafId = requestAnimationFrame(loop);
   }
 
@@ -362,7 +380,8 @@ export function createArkanoidEngine(
       if (state.phase === "playing") attachInput();
       lastTime = null;
       stopLoop();
-      rafId = requestAnimationFrame(loop);
+      // Si la partida ya terminó y no queda nada animándose, no hay nada que redibujar
+      if (!isIdle()) rafId = requestAnimationFrame(loop);
     },
     destroy() {
       destroyed = true;
