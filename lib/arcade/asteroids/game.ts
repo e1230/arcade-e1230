@@ -10,6 +10,7 @@ import { createKeyboard } from "@/lib/arcade/shared/keyboard";
 import { dist, rand } from "@/lib/arcade/shared/math";
 import { DEFAULT_SKIN } from "@/lib/arcade/shared/skins";
 import { SKINS } from "@/lib/arcade/asteroids/skins";
+import { createRenderCache } from "@/lib/arcade/asteroids/render";
 import {
   Asteroid,
   Bullet,
@@ -61,6 +62,7 @@ export function createAsteroidsEngine(
     throw new Error("No se pudo obtener el contexto 2d del canvas");
   const ctx: CanvasRenderingContext2D = context2d;
   const skin = SKINS[options?.skin ?? DEFAULT_SKIN];
+  const cache = createRenderCache(skin);
 
   // Retro dibuja la escena en un búfer reducido y la amplía sin suavizado; el canvas visible conserva su tamaño
   let buffer: HTMLCanvasElement | null = null;
@@ -276,7 +278,7 @@ export function createAsteroidsEngine(
     target.fillRect(0, 0, targetWidth, targetHeight);
 
     for (let i = 0; i < state.particles.length; i++)
-      state.particles[i].draw(target, skin);
+      state.particles[i].draw(target, skin, cache);
     for (let i = 0; i < state.asteroids.length; i++)
       state.asteroids[i].draw(target, skin);
     for (let i = 0; i < state.powerUps.length; i++)

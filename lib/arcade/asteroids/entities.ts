@@ -21,11 +21,12 @@ import {
   WIDTH,
 } from "@/lib/arcade/asteroids/constants";
 import {
+  ALPHA_STEPS,
   applyGlow,
   clearGlow,
   fillPixels,
-  hexToRgba,
   strokeShape,
+  type RenderCache,
 } from "@/lib/arcade/asteroids/render";
 import type { AsteroidsSkin } from "@/lib/arcade/asteroids/skins";
 
@@ -264,7 +265,11 @@ export class Particle {
     if (this.ttl <= 0) this.dead = true;
   }
 
-  draw(ctx: CanvasRenderingContext2D, skin: AsteroidsSkin): void {
+  draw(
+    ctx: CanvasRenderingContext2D,
+    skin: AsteroidsSkin,
+    cache: RenderCache,
+  ): void {
     const alpha = this.ttl / this.life;
     if (skin.pixelScale > 1) {
       // Un píxel lógico sin transparencia que se apaga por pasos
@@ -278,7 +283,8 @@ export class Particle {
         );
       return;
     }
-    ctx.strokeStyle = hexToRgba(skin.particle, alpha);
+    // Misma cadena que antes: el alfa se redondeaba a dos decimales; ahora se elige de la tabla
+    ctx.strokeStyle = cache.particleStyles[Math.round(alpha * ALPHA_STEPS)];
     ctx.lineWidth = skin.particleWidth;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);

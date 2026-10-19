@@ -3,6 +3,26 @@
 
 import type { AsteroidsSkin } from "@/lib/arcade/asteroids/skins";
 
+// Pasos de alfa de las partículas: `hexToRgba` redondea el alfa a dos decimales, así que solo hay 101 colores posibles
+export const ALPHA_STEPS = 100;
+
+export interface RenderCache {
+  // "rgba(r, g, b, a)" para a = 0, 0.01 … 1, con el color de partícula de la skin
+  particleStyles: readonly string[];
+  // Bala con glow ya horneado (solo Neón); null en Clásico y Retro
+  bulletSprite: HTMLCanvasElement | null;
+  // Mitad del lado del sprite de la bala, en px: el centro del círculo cae en (bulletHalf, bulletHalf)
+  bulletHalf: number;
+}
+
+// Se construye una vez en `create`: la skin no cambia durante la partida
+export function createRenderCache(skin: AsteroidsSkin): RenderCache {
+  const particleStyles: string[] = [];
+  for (let i = 0; i <= ALPHA_STEPS; i++)
+    particleStyles.push(hexToRgba(skin.particle, i / ALPHA_STEPS));
+  return { particleStyles, bulletSprite: null, bulletHalf: 0 };
+}
+
 export function applyGlow(
   ctx: CanvasRenderingContext2D,
   skin: AsteroidsSkin,
