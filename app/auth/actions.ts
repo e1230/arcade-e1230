@@ -2,6 +2,7 @@
 
 import type { AuthError, SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   type AuthErrorCode,
@@ -51,6 +52,7 @@ function toAuthErrorCode(error: AuthError): AuthErrorCode {
       return "rate_limit";
     case "validation_failed":
     case "email_address_invalid":
+    case "same_password": // la contraseña nueva es igual a la anterior
       return "invalid";
     default:
       return "unavailable";
@@ -191,6 +193,68 @@ export async function chooseAlias(input: {
       // Insertar el perfil no toca cookies, así que Next reutilizaría el layout ya
       // pintado (Navbar con «ELIGE TU ALIAS»): se invalida para que lea el alias nuevo
       revalidatePath("/", "layout");
+    }
+  } catch {
+    return fail("unavailable");
+  }
+
+  redirect(destination);
+}
+
+// Ruta a la que vuelve el enlace del correo de recuperación (plantilla por defecto de Supabase)
+const RECOVERY_CALLBACK = "/auth/callback?type=recovery&next=%2Fauth%2Freset";
+
+export async function requestPasswordReset(input: {
+  email: string;
+}): Promise<AuthResult> {
+  const fields = readStrings(input, ["email"] as const);
+  if (!fields) return fail("invalid");
+  const email = fields.email.trim();
+  if (!isValidEmail(email)) return fail("invalid");
+
+  try {
+    // El enlace vuelve al mismo origen desde el que se pidió (localhost:3000 en desarrollo)
+    const origin = (await headers()).get("origin");
+    if (!origin) return fail("unavailable");
+
+    const supabase = await createClient();
+    // El verificador PKCE queda en una cookie que escribe esta acción: el enlace
+    // solo funciona en el navegador donde se pidió
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${origin}${RECOVERY_CALLBACK}`,
+    });
+    if (error) {
+      const code = toAuthErrorCode(error);
+      // Solo se informan los errores que no revelan si el correo tiene cuenta
+      if (code === "rate_limit" || code === "invalid") return fail(code);
+      if (code === "unavailable") return fail("unavailable");
+    }
+  } catch {
+    return fail("unavailable");
+  }
+
+  return { status: "success" };
+}
+
+export async function updatePassword(input: {
+  password: string;
+}): Promise<AuthResult> {
+  const fields = readStrings(input, ["password"] as const);
+  if (!fields) return fail("invalid");
+  if (!isValidPassword(fields.password)) return fail("weak_password");
+
+  let destination = "/";
+  try {
+    const supabase = await createClient();
+    const { data: claims } = await supabase.auth.getClaims();
+    if (!claims) {
+      // La sesión de recuperación expiró: hay que pedir otro enlace
+      destination = "/login?error=link";
+    } else {
+      const { error } = await supabase.auth.updateUser({
+        password: fields.password,
+      });
+      if (error) return fail(toAuthErrorCode(error));
     }
   } catch {
     return fail("unavailable");

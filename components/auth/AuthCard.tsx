@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState, useTransition } from "react";
 import { signInWithPassword, signUp } from "@/app/auth/actions";
@@ -189,6 +190,15 @@ export function AuthCard({ initialTab = "login", next = null }: AuthCardProps) {
           accent="cyan"
           disabled={pending}
         />
+
+        {!isRegister && (
+          <Link
+            href="/auth/forgot"
+            className="-mt-1.5 self-end text-[13px] text-subtle hover:text-cyan"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        )}
 
         {error && <span className="text-sm text-pink">{error}</span>}
 
