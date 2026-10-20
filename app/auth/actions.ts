@@ -265,6 +265,15 @@ export async function updatePassword(input: {
         password: fields.password,
       });
       if (error) return fail(toAuthErrorCode(error));
+
+      // Cierra las demás sesiones de la cuenta y conserva la que abrió el enlace de recuperación
+      // (scope "global" también cerraría esta). Es de mejor esfuerzo: la contraseña ya cambió,
+      // así que un fallo aquí ni se deshace ni se le muestra al jugador.
+      try {
+        await supabase.auth.signOut({ scope: "others" });
+      } catch {
+        // Las otras sesiones sobreviven hasta que venza su refresh token
+      }
     }
   } catch {
     return fail("unavailable");
