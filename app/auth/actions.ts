@@ -1,6 +1,7 @@
 "use server";
 
 import type { AuthError, SupabaseClient } from "@supabase/supabase-js";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   type AuthErrorCode,
@@ -187,6 +188,9 @@ export async function chooseAlias(input: {
         if (!error.message.includes("profiles_pkey"))
           return fail("alias_taken");
       }
+      // Insertar el perfil no toca cookies, así que Next reutilizaría el layout ya
+      // pintado (Navbar con «ELIGE TU ALIAS»): se invalida para que lea el alias nuevo
+      revalidatePath("/", "layout");
     }
   } catch {
     return fail("unavailable");

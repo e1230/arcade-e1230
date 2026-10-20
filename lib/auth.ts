@@ -53,3 +53,7 @@ export const AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
   rate_limit: "Demasiados intentos. Espera unos minutos e intenta de nuevo.",
   unavailable: "No pudimos conectar con el servidor. Intenta de nuevo.",
 };
+
+// Fallo de Google o GitHub, también el de /login?error=oauth
+export const OAUTH_ERROR_MESSAGE =
+  "No pudimos iniciar sesión con ese proveedor. Intenta de nuevo.";

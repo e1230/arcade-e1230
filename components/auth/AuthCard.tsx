@@ -6,6 +6,7 @@ import { signInWithPassword, signUp } from "@/app/auth/actions";
 import { AuthField } from "@/components/auth/AuthField";
 import { AuthPanel } from "@/components/auth/AuthPanel";
 import { NeonButton } from "@/components/ui/NeonButton";
+import { createClient } from "@/lib/supabase/client";
 import {
   ALIAS_MAX_LENGTH,
   AUTH_ERROR_MESSAGES,
@@ -16,6 +17,7 @@ import {
   isValidEmail,
   isValidPassword,
   normalizeAlias,
+  OAUTH_ERROR_MESSAGE,
 } from "@/lib/auth";
 
 export type AuthTab = "login" | "register";
@@ -44,6 +46,8 @@ export function AuthCard({ initialTab = "login", next = null }: AuthCardProps) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  // true mientras el navegador sale hacia Google o GitHub
+  const [redirecting, setRedirecting] = useState(false);
 
   function pickTab(nextTab: AuthTab) {
     setTab(nextTab);
@@ -91,6 +95,27 @@ export function AuthCard({ initialTab = "login", next = null }: AuthCardProps) {
       if (result?.status === "error")
         setError(AUTH_ERROR_MESSAGES[result.code]);
     });
+  }
+
+  // OAuth con PKCE desde el navegador: el verificador queda en una cookie y
+  // /auth/callback lo canjea por la sesión al volver del proveedor
+  async function oauth(provider: "google" | "github") {
+    setError("");
+    setRedirecting(true);
+    try {
+      const callback = new URL("/auth/callback", window.location.origin);
+      callback.searchParams.set("next", next ?? "/");
+      const { error: oauthError } = await createClient().auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: callback.toString() },
+      });
+      // Si sale bien, el navegador ya está saliendo hacia el proveedor
+      if (!oauthError) return;
+    } catch {
+      // Faltan las variables de Supabase
+    }
+    setRedirecting(false);
+    setError(OAUTH_ERROR_MESSAGE);
   }
 
   function guest() {
@@ -183,12 +208,23 @@ export function AuthCard({ initialTab = "login", next = null }: AuthCardProps) {
         <span className="h-px flex-1 bg-border" />
       </div>
 
-      {/* Google y GitHub se habilitan con /auth/callback (paso 6 del SPEC 18) */}
       <div className="grid grid-cols-2 gap-2.5">
-        <NeonButton type="button" variant="ghost" size="md" disabled>
+        <NeonButton
+          type="button"
+          variant="ghost"
+          size="md"
+          onClick={() => oauth("google")}
+          disabled={pending || redirecting}
+        >
           Google
         </NeonButton>
-        <NeonButton type="button" variant="ghost" size="md" disabled>
+        <NeonButton
+          type="button"
+          variant="ghost"
+          size="md"
+          onClick={() => oauth("github")}
+          disabled={pending || redirecting}
+        >
           GitHub
         </NeonButton>
       </div>

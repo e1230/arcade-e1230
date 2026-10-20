@@ -69,9 +69,19 @@ export function MobileMenu() {
                     <div className="flex h-10 w-10 items-center justify-center bg-pink font-pixel text-sm text-background">
                       {user.alias?.[0] ?? "?"}
                     </div>
-                    <span className="text-base font-bold text-foreground">
-                      {user.alias ?? "SIN ALIAS"}
-                    </span>
+                    {user.alias ? (
+                      <span className="text-base font-bold text-foreground">
+                        {user.alias}
+                      </span>
+                    ) : (
+                      <Link
+                        href={`/onboarding?next=${encodeURIComponent(pathname)}`}
+                        onClick={close}
+                        className="font-pixel text-[10px] leading-relaxed text-yellow"
+                      >
+                        ELIGE TU ALIAS
+                      </Link>
+                    )}
                   </div>
                   <button
                     onClick={() => {

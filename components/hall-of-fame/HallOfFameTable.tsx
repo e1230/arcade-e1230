@@ -18,6 +18,8 @@ export function HallOfFameTable({ gameId, rows }: HallOfFameTableProps) {
   const { user } = useSession();
   // El alias es único e inmutable: sirve para marcar las filas propias
   const userName = user?.alias ?? null;
+  // Sin alias la cuenta no puede tener puntuaciones: no hay mejor marca que buscar
+  const userId = userName ? (user?.id ?? null) : null;
   // gameId viaja junto al resultado: al cambiar de pestaña, la marca de la
   // pestaña anterior deja de coincidir y desaparece sin necesidad de resetear
   // el estado de forma síncrona dentro del efecto.
@@ -28,9 +30,9 @@ export function HallOfFameTable({ gameId, rows }: HallOfFameTableProps) {
   } | null>(null);
 
   useEffect(() => {
-    if (!userName) return;
+    if (!userId) return;
     let cancelled = false;
-    fetchPersonalBest(gameId, userName).then((result) => {
+    fetchPersonalBest(gameId, userId).then((result) => {
       if (!cancelled && result.ok && result.data) {
         setPersonalBest({ gameId, ...result.data });
       }
@@ -38,7 +40,7 @@ export function HallOfFameTable({ gameId, rows }: HallOfFameTableProps) {
     return () => {
       cancelled = true;
     };
-  }, [gameId, userName]);
+  }, [gameId, userId]);
 
   const currentBest =
     userName && personalBest && personalBest.gameId === gameId

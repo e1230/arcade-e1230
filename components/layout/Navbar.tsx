@@ -48,9 +48,18 @@ export function Navbar() {
                 {user.alias?.[0] ?? "?"}
               </div>
               <div className="flex flex-col leading-tight">
-                <span className="text-sm font-bold text-foreground">
-                  {user.alias ?? "SIN ALIAS"}
-                </span>
+                {user.alias ? (
+                  <span className="text-sm font-bold text-foreground">
+                    {user.alias}
+                  </span>
+                ) : (
+                  <Link
+                    href={`/onboarding?next=${encodeURIComponent(pathname)}`}
+                    className="font-pixel text-[9px] leading-relaxed text-yellow hover:text-cyan"
+                  >
+                    ELIGE TU ALIAS
+                  </Link>
+                )}
                 <button
                   onClick={() => signOut()}
                   className="cursor-pointer border-0 bg-transparent p-0 text-left text-xs text-muted hover:text-pink"

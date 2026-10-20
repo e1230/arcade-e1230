@@ -72,6 +72,7 @@ export type Database = {
           id: number;
           name: string;
           score: number;
+          user_id: string;
         };
         Insert: {
           created_at?: string;
@@ -79,6 +80,7 @@ export type Database = {
           id?: never;
           name: string;
           score: number;
+          user_id: string;
         };
         Update: {
           created_at?: string;
@@ -86,6 +88,7 @@ export type Database = {
           id?: never;
           name?: string;
           score?: number;
+          user_id?: string;
         };
         Relationships: [
           {
@@ -93,6 +96,13 @@ export type Database = {
             columns: ["game_id"];
             isOneToOne: false;
             referencedRelation: "games";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "scores_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
             referencedColumns: ["id"];
           },
         ];

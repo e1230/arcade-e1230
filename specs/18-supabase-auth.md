@@ -397,6 +397,7 @@ type SaveMode = "save" | "login" | "alias";
 - [ ] Elegir un alias libre en `/onboarding` lo guarda en mayúsculas y vuelve a `next`. Uno tomado muestra «Ese alias ya está en uso. Prueba con otro.».
 - [ ] Con «Ahora no», la Navbar muestra el avatar `?` y el enlace «ELIGE TU ALIAS».
 - [ ] Un segundo login con el mismo proveedor y alias ya elegido va directo a `next`, sin pasar por `/onboarding`.
+- [ ] Entrar con un segundo proveedor que comparte un correo verificado con la cuenta (por ejemplo, Google y luego GitHub) usa la misma cuenta y el mismo alias, sin pasar por `/onboarding`.
 - [ ] `/onboarding` sin sesión redirige a `/login`, y con alias redirige a `next`.
 - [ ] Si se cancela el OAuth en el proveedor, `/login` muestra «No pudimos iniciar sesión con ese proveedor. Intenta de nuevo.».
 
@@ -442,6 +443,9 @@ type SaveMode = "save" | "login" | "alias";
 - **Sí:** alias inmutable en este spec. Así `scores.name` puede seguir siendo una copia sin tener que sincronizarse. Cambiar el alias va en el spec de perfil.
 - **Sí:** pantalla `/onboarding` para las cuentas OAuth. Lo eligió el usuario. Cada jugador controla su nombre público.
 - **No:** alias automático a partir del usuario de GitHub o el nombre de Google. Puede salir con caracteres inválidos o sufijos feos.
+- **Sí:** se acepta la vinculación automática de identidades de Supabase: una persona es una cuenta y tiene un solo alias, entre con el proveedor que entre. Lo eligió el usuario durante la implementación, después de que Google y GitHub terminaran en la misma cuenta. Supabase compara todos los correos verificados que entrega el proveedor (GitHub, con `user:email`, entrega también los secundarios) y no permite desactivar esa vinculación.
+- **No:** una cuenta separada por proveedor con un correo verificado compartido. Supabase no lo permite.
+- **No:** avisar en pantalla cuando un proveedor se une a una cuenta existente. Se descartó por ahora: el jugador ve su propio alias en la Navbar.
 - **Sí:** tras el login se redirige a `/onboarding`, pero después el jugador navega libre. Lo eligió el usuario. Mantiene el proxy sin consultas extra y sin redirecciones.
 - **No:** bloquear la navegación hasta elegir el alias. Exige consultar el perfil en el proxy en cada petición.
 - **Sí:** el trigger de registro crea el perfil y, si el alias está tomado, no falla. La cuenta queda sin perfil y cae en el mismo flujo de `/onboarding` que OAuth. Así se evita el error genérico «Database error saving new user» de Supabase.
