@@ -2,17 +2,18 @@
 
 import type { AuthError, SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   type AuthErrorCode,
   type AuthResult,
   isValidAlias,
   isValidEmail,
+  isPasswordTooLong,
   isValidPassword,
   normalizeAlias,
 } from "@/lib/auth";
 import { safeNextPath } from "@/lib/safe-next";
+import { readSiteUrl } from "@/lib/site-url";
 import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -125,6 +126,7 @@ export async function signUp(input: {
   const email = fields.email.trim();
   if (!isValidAlias(alias) || !isValidEmail(email)) return fail("invalid");
   if (!isValidPassword(fields.password)) return fail("weak_password");
+  if (isPasswordTooLong(fields.password)) return fail("password_too_long");
   const next = safeNextPath(fields.next);
 
   let destination: string;
@@ -186,9 +188,10 @@ export async function chooseAlias(input: {
         .insert({ id: userId, alias });
       if (error) {
         if (error.code !== "23505") return fail("unavailable");
-        // 23505 en la clave primaria: la cuenta ya tenía alias, se sigue a next
-        if (!error.message.includes("profiles_pkey"))
-          return fail("alias_taken");
+        // 23505 puede ser la clave primaria (la cuenta ya tenía alias, se sigue a next)
+        // o el alias único (lo usa otra cuenta): se distingue consultando el perfil,
+        // sin depender del texto del error ni del nombre de la restricción
+        if (!(await hasProfile(supabase, userId))) return fail("alias_taken");
       }
       // Insertar el perfil no toca cookies, así que Next reutilizaría el layout ya
       // pintado (Navbar con «ELIGE TU ALIAS»): se invalida para que lea el alias nuevo
@@ -200,6 +203,9 @@ export async function chooseAlias(input: {
 
   redirect(destination);
 }
+
+// Origen de respaldo del correo de recuperación cuando falta NEXT_PUBLIC_SITE_URL en desarrollo
+const DEV_SITE_URL = "http://localhost:3000";
 
 // Ruta a la que vuelve el enlace del correo de recuperación (plantilla por defecto de Supabase)
 const RECOVERY_CALLBACK = "/auth/callback?type=recovery&next=%2Fauth%2Freset";
@@ -213,8 +219,12 @@ export async function requestPasswordReset(input: {
   if (!isValidEmail(email)) return fail("invalid");
 
   try {
-    // El enlace vuelve al mismo origen desde el que se pidió (localhost:3000 en desarrollo)
-    const origin = (await headers()).get("origin");
+    // El enlace vuelve al origen fijo del sitio, nunca al de la cabecera Origin (la controla
+    // quien llame la acción). Sin la variable, en desarrollo se usa localhost:3000 y en
+    // producción no se envía el correo.
+    const origin =
+      readSiteUrl() ??
+      (process.env.NODE_ENV === "production" ? null : DEV_SITE_URL);
     if (!origin) return fail("unavailable");
 
     const supabase = await createClient();
@@ -242,6 +252,7 @@ export async function updatePassword(input: {
   const fields = readStrings(input, ["password"] as const);
   if (!fields) return fail("invalid");
   if (!isValidPassword(fields.password)) return fail("weak_password");
+  if (isPasswordTooLong(fields.password)) return fail("password_too_long");
 
   let destination = "/";
   try {
@@ -255,6 +266,15 @@ export async function updatePassword(input: {
         password: fields.password,
       });
       if (error) return fail(toAuthErrorCode(error));
+
+      // Cierra las demás sesiones de la cuenta y conserva la que abrió el enlace de recuperación
+      // (scope "global" también cerraría esta). Es de mejor esfuerzo: la contraseña ya cambió,
+      // así que un fallo aquí ni se deshace ni se le muestra al jugador.
+      try {
+        await supabase.auth.signOut({ scope: "others" });
+      } catch {
+        // Las otras sesiones sobreviven hasta que venza su refresh token
+      }
     }
   } catch {
     return fail("unavailable");

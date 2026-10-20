@@ -1,6 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
+import { sessionCookieOptions } from "./cookie-options";
 import { readSupabaseEnv } from "./env";
 
 // Cliente de Supabase para Client Components. La sesión vive en cookies,
@@ -12,5 +13,7 @@ export function createClient(): SupabaseClient<Database> {
       "Faltan variables de entorno de Supabase: define NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY en .env",
     );
   }
-  return createBrowserClient(env.url, env.publishableKey);
+  return createBrowserClient(env.url, env.publishableKey, {
+    cookieOptions: sessionCookieOptions(),
+  });
 }

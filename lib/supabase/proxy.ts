@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import { sessionCookieOptions } from "./cookie-options";
 import { readSupabaseEnv } from "./env";
 
 // Refresca la sesión de Supabase en cada petición y reescribe sus cookies.
@@ -17,6 +18,7 @@ export async function updateSession(
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(env.url, env.publishableKey, {
+    cookieOptions: sessionCookieOptions(),
     cookies: {
       getAll() {
         return request.cookies.getAll();

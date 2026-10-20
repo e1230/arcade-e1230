@@ -1,6 +1,6 @@
 # SPEC 20 — Endurecimiento de la autenticación
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC 04, SPEC 18, SPEC 19
 > **Fecha:** 2026-10-19
 > **Objetivo:** Cerrar los hallazgos de la revisión de seguridad de la autenticación: cerrar las otras sesiones al cambiar la contraseña, fijar la URL del sitio para el correo de recuperación y para las cookies `Secure`, acotar la longitud de la contraseña y quitar dos decisiones frágiles de `chooseAlias` y `/auth/callback`.

@@ -8,6 +8,7 @@ import { NeonButton } from "@/components/ui/NeonButton";
 import {
   AUTH_ERROR_MESSAGES,
   FIELD_MESSAGES,
+  isPasswordTooLong,
   isValidPassword,
 } from "@/lib/auth";
 
@@ -20,6 +21,10 @@ export function ResetPasswordForm() {
     event.preventDefault();
     if (!isValidPassword(form.password)) {
       setError(FIELD_MESSAGES.password);
+      return;
+    }
+    if (isPasswordTooLong(form.password)) {
+      setError(FIELD_MESSAGES.passwordMax);
       return;
     }
     if (form.password !== form.repeat) {
