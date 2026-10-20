@@ -103,7 +103,7 @@ Criterios de aceptación de ranking que siempre van:
 - Esa puntuación aparece en `/games/<id>` (si entra en el top 10) y en la pestaña `<TÍTULO>` del Salón de la Fama.
 - La tarjeta de `<TÍTULO>` en `/games` muestra como MEJOR PUNTUACIÓN la del primer lugar.
 
-Si el spec pide borrar las filas de prueba, se hace con `execute_sql` como `postgres` (`delete from public.scores where game_id = '<id>' and name = '…'`) y queda escrito en el paso.
+Si el spec pide borrar las filas de prueba, se hace con una migración `delete_<id>_test_scores` (`delete from public.scores where game_id = '<id>' and name = '…'`), nunca con `execute_sql`, y queda escrito en el paso. Su copia en `db/production/migrations/` empieza con `-- Solo desarrollo: no aplicar en producción.`, porque esas filas solo existen en dev.
 
 ## Lo que queda fuera por defecto
 
