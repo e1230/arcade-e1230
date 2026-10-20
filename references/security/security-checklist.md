@@ -1,10 +1,10 @@
 ## Checklist de seguridad básico
 
-  - [ ] RLS: Row Level Security habilitado en ambas tablas: `games` y `scores`
-  - [ ] Minimum password length — mínimo 8 caracteres
-  - [ ] Leaked password protection — (el warning 4)
-  - [ ] Max signup rate — limitar signups por IP (anti-bot)
-  - [ ] Headers de seguridad en Next.js
+  - [x] RLS: Row Level Security habilitado en ambas tablas: `games` y `scores`
+  - [x] Minimum password length — mínimo 8 caracteres
+  - [ ] Leaked password protection — (el warning 4). **Riesgo aceptado (SPEC 19):** solo existe en el plan Pro de Supabase y el proyecto está en Free. Se activa si el proyecto pasa a Pro.
+  - [x] Max signup rate — limitar signups por IP (anti-bot). 15 cada 5 min en el panel (SPEC 19).
+  - [x] Headers de seguridad en Next.js
   
   Ej:
 

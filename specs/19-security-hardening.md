@@ -131,7 +131,14 @@ revoke update, delete, truncate, trigger, references
 revoke insert, update, delete, truncate, trigger, references
   on public.games, public.leaderboard
   from anon, authenticated;
+
+-- leaderboard es una vista: solo lectura
+revoke update, delete, truncate, trigger, references
+  on public.leaderboard
+  from anon, authenticated;
 ```
+
+La última sentencia repite lo que ya revoca la anterior sobre `leaderboard`. Se dejó porque es la que se aplicó en la migración y no cambia ningún permiso.
 
 Permisos que quedan para `anon` y `authenticated`:
 
