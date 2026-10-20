@@ -2,7 +2,6 @@
 
 import type { AuthError, SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   type AuthErrorCode,
@@ -13,6 +12,7 @@ import {
   normalizeAlias,
 } from "@/lib/auth";
 import { safeNextPath } from "@/lib/safe-next";
+import { readSiteUrl } from "@/lib/site-url";
 import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -201,6 +201,9 @@ export async function chooseAlias(input: {
   redirect(destination);
 }
 
+// Origen de respaldo del correo de recuperación cuando falta NEXT_PUBLIC_SITE_URL en desarrollo
+const DEV_SITE_URL = "http://localhost:3000";
+
 // Ruta a la que vuelve el enlace del correo de recuperación (plantilla por defecto de Supabase)
 const RECOVERY_CALLBACK = "/auth/callback?type=recovery&next=%2Fauth%2Freset";
 
@@ -213,8 +216,12 @@ export async function requestPasswordReset(input: {
   if (!isValidEmail(email)) return fail("invalid");
 
   try {
-    // El enlace vuelve al mismo origen desde el que se pidió (localhost:3000 en desarrollo)
-    const origin = (await headers()).get("origin");
+    // El enlace vuelve al origen fijo del sitio, nunca al de la cabecera Origin (la controla
+    // quien llame la acción). Sin la variable, en desarrollo se usa localhost:3000 y en
+    // producción no se envía el correo.
+    const origin =
+      readSiteUrl() ??
+      (process.env.NODE_ENV === "production" ? null : DEV_SITE_URL);
     if (!origin) return fail("unavailable");
 
     const supabase = await createClient();
