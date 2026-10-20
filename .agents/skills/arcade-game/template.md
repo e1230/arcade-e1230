@@ -77,7 +77,7 @@ Los bloques marcados **(si aplica)** se quitan enteros cuando no aplican. Reempl
 
 Sin cambios: <lista explícita de lo compartido que NO se toca, p. ej. `GameCanvas`, `StartScreen`, `GameOverModal`, `lib/leaderboard*.ts`>.
 
-Base de datos (proyecto `xanuntuhanyubcqiudlp`, con `apply_migration` del MCP de Supabase): <migraciones en orden, o «sin cambios»>.
+Base de datos (proyecto `xanuntuhanyubcqiudlp`, con `apply_migration` del MCP de Supabase): <migraciones en orden, o «sin cambios»>. Cada migración se guarda también en `db/production/migrations/<version>_<name>.sql` para aplicarla en producción.
 
 Convenciones:
 

@@ -1,6 +1,6 @@
 # Catálogo y ranking en Supabase
 
-Esta guía resume cómo integra la plataforma a un juego desde el SPEC 06 y qué migraciones puede necesitar su spec. Proyecto de Supabase: `xanuntuhanyubcqiudlp`, conectado por MCP. No hay carpeta `supabase/` ni Supabase CLI: las migraciones se aplican con `apply_migration` sobre el proyecto remoto.
+Esta guía resume cómo integra la plataforma a un juego desde el SPEC 06 y qué migraciones puede necesitar su spec. Proyecto de Supabase: `xanuntuhanyubcqiudlp`, conectado por MCP. No hay carpeta `supabase/` ni Supabase CLI: las migraciones se aplican con `apply_migration` sobre el proyecto remoto. Ese proyecto es el de desarrollo; producción no tiene MCP, así que el plan del spec también guarda cada migración en `db/production/migrations/<version>_<name>.sql` para que el usuario la aplique allá (ver `db/production/README.md`).
 
 ## Cómo funciona hoy
 
