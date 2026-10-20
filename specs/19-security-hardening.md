@@ -1,6 +1,6 @@
 # SPEC 19 — Endurecimiento de seguridad básico
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04, SPEC 06, SPEC 18
 > **Fecha:** 2026-10-19
 > **Objetivo:** Cerrar el checklist de `references/security/security-checklist.md` con headers de seguridad en Next.js, permisos mínimos en las tablas de Supabase, el límite de registros e inicios de sesión y los warnings del linter de seguridad.
@@ -131,7 +131,14 @@ revoke update, delete, truncate, trigger, references
 revoke insert, update, delete, truncate, trigger, references
   on public.games, public.leaderboard
   from anon, authenticated;
+
+-- leaderboard es una vista: solo lectura
+revoke update, delete, truncate, trigger, references
+  on public.leaderboard
+  from anon, authenticated;
 ```
+
+La última sentencia repite lo que ya revoca la anterior sobre `leaderboard`. Se dejó porque es la que se aplicó en la migración y no cambia ningún permiso.
 
 Permisos que quedan para `anon` y `authenticated`:
 
