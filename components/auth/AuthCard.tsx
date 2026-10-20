@@ -16,6 +16,7 @@ import {
   FIELD_MESSAGES,
   isValidAlias,
   isValidEmail,
+  isPasswordTooLong,
   isValidPassword,
   normalizeAlias,
   OAUTH_ERROR_MESSAGE,
@@ -69,6 +70,9 @@ export function AuthCard({
     if (!isValidEmail(form.email.trim())) return FIELD_MESSAGES.email;
     if (tab === "register" && !isValidPassword(form.pass)) {
       return FIELD_MESSAGES.password;
+    }
+    if (tab === "register" && isPasswordTooLong(form.pass)) {
+      return FIELD_MESSAGES.passwordMax;
     }
     if (tab === "login" && !form.pass) return "Ingresa tu contraseña.";
     return "";

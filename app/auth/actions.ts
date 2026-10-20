@@ -8,6 +8,7 @@ import {
   type AuthResult,
   isValidAlias,
   isValidEmail,
+  isPasswordTooLong,
   isValidPassword,
   normalizeAlias,
 } from "@/lib/auth";
@@ -125,6 +126,7 @@ export async function signUp(input: {
   const email = fields.email.trim();
   if (!isValidAlias(alias) || !isValidEmail(email)) return fail("invalid");
   if (!isValidPassword(fields.password)) return fail("weak_password");
+  if (isPasswordTooLong(fields.password)) return fail("password_too_long");
   const next = safeNextPath(fields.next);
 
   let destination: string;
@@ -249,6 +251,7 @@ export async function updatePassword(input: {
   const fields = readStrings(input, ["password"] as const);
   if (!fields) return fail("invalid");
   if (!isValidPassword(fields.password)) return fail("weak_password");
+  if (isPasswordTooLong(fields.password)) return fail("password_too_long");
 
   let destination = "/";
   try {
