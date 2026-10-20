@@ -1,6 +1,6 @@
 ---
 name: spec-impl-game
-description: Implementa un spec de juego aprobado (specs/NN-<id>-game.md) con el mismo flujo de /spec-impl (valida el estado, crea la rama spec-NN-slug e implementa paso a paso con pausas para revisar diffs) y, al terminar, lanza en cadena al subagente skin-designer y después a mobile-porter para ese juego.
+description: Implementa un spec de juego aprobado (specs/NN-<id>-game.md) con el mismo flujo de /spec-impl (valida el estado, crea la rama spec-NN-slug e implementa paso a paso con pausas para revisar diffs) y, al terminar, lanza en cadena al subagente skin-designer, después a mobile-porter para ese juego y por último a security-auditor sobre el spec.
 disable-model-invocation: true
 argument-hint: <NN-id-game>
 allowed-tools: Read, Glob, Grep, Edit, Write, AskUserQuestion, Agent, Bash(git status:*), Bash(git branch:*), Bash(git checkout:*), Bash(git log:*), Bash(git diff:*), Bash(git stash:*), Bash(cat:*), Bash(ls:*)
@@ -26,7 +26,7 @@ Configuración de creación de ramas:
 
 ## Instrucciones
 
-Este comando es `/spec-impl` más dos agentes al final. **No repite sus reglas: las toma de su propio archivo**, para que haya una sola fuente de verdad.
+Este comando es `/spec-impl` más tres agentes al final. **No repite sus reglas: las toma de su propio archivo**, para que haya una sola fuente de verdad.
 
 El argumento recibido es: `$ARGUMENTS`
 
@@ -52,7 +52,7 @@ Agregados propios de los juegos, que se suman a esas fases:
 
   ```
   Paso N completado. ¿Revisas el diff? Si lo apruebas, cierro la implementación
-  y lanzo skin-designer y después mobile-porter para <id>.
+  y lanzo skin-designer, después mobile-porter para <id> y por último security-auditor.
   ```
 
   Espera la aprobación. Si el usuario pide cambios, hazlos y vuelve a pedirla. Si la implementación se detiene antes del último paso, **no lances ningún agente**.
@@ -75,9 +75,11 @@ Corre solo cuando el usuario aprueba el diff del último paso. No vuelvas a preg
 
 4. **Recién entonces lanza `mobile-porter`**: `subagent_type: "mobile-porter"`, `description: "Táctil de <id>"`, prompt `Agrega controles táctiles a <id>.`. Espera la notificación y transmite su resultado: archivos tocados, si creó la base común y el mapeo táctil.
 
-   Los dos agentes son independientes: si `skin-designer` falla o no escribe nada, igual lanza `mobile-porter` e informa el fallo. **Nunca los lances en paralelo** ni en el mismo mensaje.
+   Los agentes son independientes: si `skin-designer` falla o no escribe nada, igual lanza `mobile-porter` e informa el fallo. **Nunca los lances en paralelo** ni en el mismo mensaje.
 
-5. **Cierre.** Sin hacer commit, termina con:
+5. **Recién entonces lanza `security-auditor`**: `subagent_type: "security-auditor"`, `description: "Seguridad del spec NN"`, prompt `Audita el spec NN-<id>-game en modo spec.`. Espera la notificación y transmite su resumen en pocas líneas: severidades abiertas, lo que cambió desde la última auditoría y su hallazgo más importante. El agente solo reporta (escribe únicamente `references/security-audit.md`), así que no hay diff de código que revisar. Si falla, informa el fallo y sigue con el cierre.
+
+6. **Cierre.** Sin hacer commit, termina con:
 
    ```
    ✅ Implementación de <id> lista.
@@ -88,10 +90,12 @@ Corre solo cuando el usuario aprueba el diff del último paso. No vuelvas a preg
      2. Revisa el diff de mobile-porter (controles táctiles), que escribe código directo.
      3. El spec de skins de skin-designer queda en Borrador: revísalo, apruébalo
         e impleméntalo con /spec-impl.
-     4. Haz el commit final antes de fusionar la rama.
+     4. Lee el informe de seguridad en references/security-audit.md. Si hay
+        hallazgos nuevos que importen, conviene un /spec aparte para cada uno.
+     5. Haz el commit final antes de fusionar la rama.
    ```
 
-   Adapta las líneas 2 y 3 a lo que de verdad hizo cada agente (por ejemplo, quita la 3 si el juego ya tenía skins).
+   Adapta las líneas 2, 3 y 4 a lo que de verdad hizo cada agente (por ejemplo, quita la 3 si el juego ya tenía skins, y la 4 si `security-auditor` falló).
 
 ---
 
@@ -106,6 +110,7 @@ Corre solo cuando el usuario aprueba el diff del último paso. No vuelvas a preg
   Fase 5      →  registry.ts tiene pacman ✅
                  skin-designer «Aplica skins a pacman» → espera → resumen
                  mobile-porter «Agrega controles táctiles a pacman» → espera → resumen
+                 security-auditor «Audita el spec 11-pacman-game en modo spec» → espera → resumen
                  Cierre sin commit
 
 /spec-impl-game 10-asteroids-skins
