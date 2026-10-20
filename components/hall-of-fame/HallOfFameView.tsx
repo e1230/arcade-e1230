@@ -24,8 +24,8 @@ export function HallOfFameView({ games, leaderboards }: HallOfFameViewProps) {
 
       {!user && (
         <p className="m-0 mt-4.5 text-center text-[15px] text-muted">
-          <Link href="/login">Inicia sesión</Link> para ver tu mejor marca
-          destacada.
+          <Link href="/login?next=%2Fhall-of-fame">Inicia sesión</Link> para ver
+          tu mejor marca destacada.
         </p>
       )}
     </>

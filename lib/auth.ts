@@ -57,3 +57,7 @@ export const AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
 // Fallo de Google o GitHub, también el de /login?error=oauth
 export const OAUTH_ERROR_MESSAGE =
   "No pudimos iniciar sesión con ese proveedor. Intenta de nuevo.";
+
+// Enlace de recuperación inválido, usado o abierto en otro navegador (/login?error=link)
+export const LINK_ERROR_MESSAGE =
+  "El enlace no es válido o ya expiró. Pide uno nuevo.";

@@ -27,6 +27,8 @@ interface AuthCardProps {
   initialTab?: AuthTab;
   // Ruta interna ya validada con safeNextPath; null si /login llegó sin ?next=
   next?: string | null;
+  // Mensaje de ?error= (OAuth fallido o enlace de recuperación inválido)
+  initialError?: string;
 }
 
 const ACTIVE_TAB_CLASS =
@@ -41,11 +43,15 @@ function toAliasInput(value: string): string {
   return value.replace(/\s/g, "").toUpperCase();
 }
 
-export function AuthCard({ initialTab = "login", next = null }: AuthCardProps) {
+export function AuthCard({
+  initialTab = "login",
+  next = null,
+  initialError = "",
+}: AuthCardProps) {
   const router = useRouter();
   const [tab, setTab] = useState<AuthTab>(initialTab);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError);
   const [pending, startTransition] = useTransition();
   // true mientras el navegador sale hacia Google o GitHub
   const [redirecting, setRedirecting] = useState(false);
