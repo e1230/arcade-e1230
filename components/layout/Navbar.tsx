@@ -6,7 +6,7 @@ import { Logo } from "@/components/ui/Logo";
 import { NeonButton } from "@/components/ui/NeonButton";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { NAV_LINKS, getActiveHref } from "@/components/layout/nav-links";
-import { getPlayerName, useSession } from "@/lib/session";
+import { useSession } from "@/lib/session";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -20,7 +20,7 @@ export function Navbar() {
           <Logo size="nav" />
         </Link>
 
-        <div className="hidden lg:flex lg:gap-7 lg:ml-3">
+        <div className="hidden lg:ml-3 lg:flex lg:gap-7">
           {NAV_LINKS.map((link) => {
             const active = activeHref === link.href;
             return (
@@ -45,10 +45,21 @@ export function Navbar() {
           {user ? (
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center bg-pink font-pixel text-sm text-background shadow-[0_0_12px_#ff006e]">
-                {user.name[0]}
+                {user.alias?.[0] ?? "?"}
               </div>
               <div className="flex flex-col leading-tight">
-                <span className="text-sm font-bold text-foreground">{getPlayerName(user)}</span>
+                {user.alias ? (
+                  <span className="text-sm font-bold text-foreground">
+                    {user.alias}
+                  </span>
+                ) : (
+                  <Link
+                    href={`/onboarding?next=${encodeURIComponent(pathname)}`}
+                    className="font-pixel text-[9px] leading-relaxed text-yellow hover:text-cyan"
+                  >
+                    ELIGE TU ALIAS
+                  </Link>
+                )}
                 <button
                   onClick={() => signOut()}
                   className="cursor-pointer border-0 bg-transparent p-0 text-left text-xs text-muted hover:text-pink"

@@ -12,7 +12,8 @@ interface DetailLeaderboardProps {
 
 export function DetailLeaderboard({ rows }: DetailLeaderboardProps) {
   const { user } = useSession();
-  const userName = user && !user.guest ? user.name : null;
+  // El alias es único e inmutable: sirve para marcar las filas propias
+  const userName = user?.alias ?? null;
 
   return (
     <aside className="border-2 border-cyan/60 bg-surface shadow-[0_0_20px_rgba(0,245,255,.25),inset_0_0_30px_rgba(0,245,255,.06)]">

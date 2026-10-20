@@ -3,11 +3,16 @@ import { formatScore } from "@/lib/format";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+// save: cuenta con alias · login: invitado · alias: cuenta que todavía no eligió alias
+export type SaveMode = "save" | "login" | "alias";
+
 interface GameOverModalProps {
   score: number;
   saveStatus: SaveStatus;
   typedMessage: string;
-  isGuest: boolean;
+  saveMode: SaveMode;
+  // Ruta a la que se vuelve tras iniciar sesión o elegir el alias
+  returnPath: string;
   onSave: () => void;
   onPlayAgain: () => void;
 }
@@ -16,10 +21,13 @@ export function GameOverModal({
   score,
   saveStatus,
   typedMessage,
-  isGuest,
+  saveMode,
+  returnPath,
   onSave,
   onPlayAgain,
 }: GameOverModalProps) {
+  const next = encodeURIComponent(returnPath);
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-deep/86 p-5 backdrop-blur-[3px]">
       <div className="flex w-full max-w-[460px] flex-col items-center gap-5.5 border-2 border-pink bg-surface p-9 py-7 text-center shadow-[0_0_40px_rgba(255,0,110,.5)] motion-safe:animate-pop">
@@ -35,7 +43,31 @@ export function GameOverModal({
           </span>
         </div>
 
-        {saveStatus !== "saved" && (
+        {saveMode === "login" && (
+          <NeonButton
+            href={`/login?next=${next}`}
+            variant="solid"
+            accent="yellow"
+            size="md"
+            className="w-full"
+          >
+            INICIA SESIÓN PARA GUARDAR
+          </NeonButton>
+        )}
+
+        {saveMode === "alias" && (
+          <NeonButton
+            href={`/onboarding?next=${next}`}
+            variant="solid"
+            accent="yellow"
+            size="md"
+            className="w-full"
+          >
+            ELIGE TU ALIAS PARA GUARDAR
+          </NeonButton>
+        )}
+
+        {saveMode === "save" && saveStatus !== "saved" && (
           <>
             <NeonButton
               variant="solid"
@@ -50,11 +82,6 @@ export function GameOverModal({
             {saveStatus === "error" && (
               <span className="-mt-2.5 text-[13px] text-pink">
                 NO SE PUDO GUARDAR. INTENTA DE NUEVO.
-              </span>
-            )}
-            {isGuest && (
-              <span className="-mt-2.5 text-[13px] text-muted">
-                Como invitado, aparecerás como INVITADO en el ranking.
               </span>
             )}
           </>

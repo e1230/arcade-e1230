@@ -1,32 +1,42 @@
 "use client";
 
-import { STORAGE_KEYS, useStoredValue, writeStoredValue } from "./storage";
+import { useRouter } from "next/navigation";
+import { createContext, useContext } from "react";
+import { signOut as signOutAction } from "@/app/auth/actions";
+import { createClient } from "./supabase/client";
 
 export interface SessionUser {
-  name: string;
-  guest: boolean;
+  id: string;
+  email: string | null;
+  alias: string | null; // null = la cuenta todavía no eligió alias
 }
 
-const NO_USER: SessionUser | null = null;
+// El valor inicial lo pone SessionProvider con el usuario leído en el servidor
+export const SessionContext = createContext<SessionUser | null>(null);
 
 export function useSession(): {
   user: SessionUser | null;
-  signIn(user: SessionUser): void;
-  signOut(): void;
+  signOut(): Promise<void>;
 } {
-  const user = useStoredValue<SessionUser | null>(STORAGE_KEYS.user, NO_USER);
+  const user = useContext(SessionContext);
+  const router = useRouter();
 
   return {
     user,
-    signIn(next: SessionUser) {
-      writeStoredValue(STORAGE_KEYS.user, next);
-    },
-    signOut() {
-      writeStoredValue(STORAGE_KEYS.user, null);
+    async signOut() {
+      await signOutAction();
+      try {
+        // Las cookies ya se borraron en el servidor; esto solo avisa a las otras
+        // pestañas (SIGNED_OUT por BroadcastChannel) para que refresquen su sesión
+        await createClient().auth.signOut({ scope: "local" });
+      } catch {
+        // Sin variables de Supabase no hay otras pestañas que avisar
+      }
+      router.refresh();
     },
   };
 }
 
 export function getPlayerName(user: SessionUser | null): string {
-  return user?.name ?? "INVITADO";
+  return user?.alias ?? "INVITADO";
 }

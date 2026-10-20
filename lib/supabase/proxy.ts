@@ -3,7 +3,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { readSupabaseEnv } from "./env";
 
 // Refresca la sesión de Supabase en cada petición y reescribe sus cookies.
-// Nunca redirige: las guardas de rutas llegan con el spec de autenticación.
+// Nunca redirige: las redirecciones por sesión viven en las páginas que las necesitan
+// (/login, /onboarding y /auth/reset, SPEC 18), así el proxy no consulta perfiles.
 export async function updateSession(
   request: NextRequest,
 ): Promise<NextResponse> {

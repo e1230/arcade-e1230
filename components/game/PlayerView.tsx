@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CrtScreen } from "@/components/game/CrtScreen";
 import { GameCanvas } from "@/components/game/GameCanvas";
-import { GameOverModal } from "@/components/game/GameOverModal";
+import { GameOverModal, type SaveMode } from "@/components/game/GameOverModal";
 import { MobileGamepad } from "@/components/game/MobileGamepad";
 import { PlayerHud } from "@/components/game/PlayerHud";
 import { StartScreen } from "@/components/game/StartScreen";
@@ -213,11 +213,8 @@ export function PlayerView({ game }: PlayerViewProps) {
 
   async function handleSave() {
     setState((s) => ({ ...s, saveStatus: "saving" }));
-    const { ok } = await insertScore({
-      gameId: game.id,
-      name: getPlayerName(user),
-      score: state.score,
-    });
+    // El alias lo pone la base desde la sesión: el navegador solo manda juego y puntuación
+    const { ok } = await insertScore({ gameId: game.id, score: state.score });
 
     if (!ok) {
       setState((s) => ({ ...s, saveStatus: "error" }));
@@ -237,7 +234,8 @@ export function PlayerView({ game }: PlayerViewProps) {
     }, TYPE_MS);
   }
 
-  const isGuest = !user || user.guest;
+  // Solo una cuenta con alias guarda; el invitado inicia sesión y la cuenta sin alias lo elige
+  const saveMode: SaveMode = !user ? "login" : user.alias ? "save" : "alias";
   const playerName = getPlayerName(user);
   const pauseLabel = state.paused ? "SEGUIR" : "PAUSA";
   const accentHex = ACCENTS[game.accent].hex;
@@ -339,7 +337,8 @@ export function PlayerView({ game }: PlayerViewProps) {
           score={state.score}
           saveStatus={state.saveStatus}
           typedMessage={state.typedMessage}
-          isGuest={isGuest}
+          saveMode={saveMode}
+          returnPath={`/games/${game.id}/play`}
           onSave={handleSave}
           onPlayAgain={startLoading}
         />
