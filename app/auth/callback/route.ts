@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const code = searchParams.get("code");
   const next = safeNextPath(searchParams.get("next"));
+  // Solo elige el mensaje de error: un enlace de recuperación fallido no es un fallo de OAuth
   const isRecovery = searchParams.get("type") === "recovery";
 
   let destination = isRecovery ? "/login?error=link" : "/login?error=oauth";
@@ -17,20 +18,16 @@ export async function GET(request: NextRequest) {
       const supabase = await createClient();
       const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       if (!error) {
-        if (isRecovery) {
-          // Recuperación: directo a elegir la contraseña nueva, sin revisar el perfil
-          destination = next;
-        } else {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("id", data.user.id)
-            .maybeSingle();
-          // Primer login OAuth: todavía no hay alias, se pide en /onboarding
-          destination = profile
-            ? next
-            : `/onboarding?next=${encodeURIComponent(next)}`;
-        }
+        // Siempre se revisa el perfil: type=recovery lo manda el cliente y no decide el destino
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", data.user.id)
+          .maybeSingle();
+        // Sin alias (primer login OAuth) se pide en /onboarding, que vuelve a next
+        destination = profile
+          ? next
+          : `/onboarding?next=${encodeURIComponent(next)}`;
       }
     } catch {
       // Faltan las variables de Supabase: se queda en el /login?error=… inicial
