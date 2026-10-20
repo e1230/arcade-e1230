@@ -1,6 +1,6 @@
 # SPEC 19 — Endurecimiento de seguridad básico
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 04, SPEC 06, SPEC 18
 > **Fecha:** 2026-10-19
 > **Objetivo:** Cerrar el checklist de `references/security/security-checklist.md` con headers de seguridad en Next.js, permisos mínimos en las tablas de Supabase, el límite de registros e inicios de sesión y los warnings del linter de seguridad.
