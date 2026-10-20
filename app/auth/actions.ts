@@ -188,9 +188,10 @@ export async function chooseAlias(input: {
         .insert({ id: userId, alias });
       if (error) {
         if (error.code !== "23505") return fail("unavailable");
-        // 23505 en la clave primaria: la cuenta ya tenía alias, se sigue a next
-        if (!error.message.includes("profiles_pkey"))
-          return fail("alias_taken");
+        // 23505 puede ser la clave primaria (la cuenta ya tenía alias, se sigue a next)
+        // o el alias único (lo usa otra cuenta): se distingue consultando el perfil,
+        // sin depender del texto del error ni del nombre de la restricción
+        if (!(await hasProfile(supabase, userId))) return fail("alias_taken");
       }
       // Insertar el perfil no toca cookies, así que Next reutilizaría el layout ya
       // pintado (Navbar con «ELIGE TU ALIAS»): se invalida para que lea el alias nuevo
