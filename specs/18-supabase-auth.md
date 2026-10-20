@@ -1,6 +1,6 @@
 # SPEC 18 — Autenticación real con Supabase Auth
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC 01, SPEC 04, SPEC 06
 > **Fecha:** 2026-10-19
 > **Objetivo:** Reemplazar la sesión simulada de `localStorage` por cuentas reales de Supabase Auth (correo y contraseña, Google y GitHub) con un alias único por jugador, y ligar cada puntuación del ranking a su cuenta.
